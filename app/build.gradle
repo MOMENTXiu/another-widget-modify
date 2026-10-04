@@ -25,7 +25,7 @@ android {
         minSdkVersion 23
         targetSdkVersion 30
         versionCode 139
-        versionName "2.3.4-hubert.1"
+        versionName "2.3.4-hikamod.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GOOGLE_API_KEY", apikeyProperties['GOOGLE_API_KEY'])
