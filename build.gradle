@@ -3,11 +3,15 @@
 buildscript {
     ext.kotlin_version = '1.4.32'
     repositories {
+        // jcenter() is dead: it now just redirects to Maven Central, which is missing artifacts this
+        // project needs (slimadapter, switchbutton, providers-android). The Aliyun mirrors still have
+        // them and are far more reliable than dl.google.com from mainland China.
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
         google()
-        jcenter()
         maven { url 'https://jitpack.io' }
         mavenCentral()
-        
+
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.2.0'
@@ -26,11 +30,15 @@ buildscript {
 
 allprojects {
     repositories {
+        // jcenter() is dead: it now just redirects to Maven Central, which is missing artifacts this
+        // project needs (slimadapter, switchbutton, providers-android). The Aliyun mirrors still have
+        // them and are far more reliable than dl.google.com from mainland China.
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
         google()
-        jcenter()
         maven { url 'https://jitpack.io' }
         mavenCentral()
-        
+
     }
 }
 

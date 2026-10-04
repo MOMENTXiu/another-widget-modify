@@ -134,53 +134,20 @@
     <string name="show_weather_not_visible">Infos météo non visibles</string>
     <string name="settings_weather_app_title">Taper sur la météo ouvre</string>
     <string name="settings_weather_provider_api_key_title">Clé API pour la météo</string>
-    <string name="settings_weather_provider_api_key_subtitle_all_set">Fournisseur météo correctement configuré.</string>
-    <string name="settings_weather_provider_api_key_subtitle_not_set">Le fournisseur météo doit être configuré.</string>
-    <string name="api_key_hint">Clé API OpenWeatherMap</string>
     <string name="default_weather_app">Google Weather</string>
-    <string name="weather_warning">La météo de Google Awareness est obsolète. Il faut désormais une clé API d\'un fournisseur tiers pour afficher la météo dans le widget.</string>
     <string name="settings_weather_icon_pack_title">Pack d\'icônes</string>
     <string name="settings_weather_icon_pack_default">Pack d\'icônes %d</string>
     <string name="background_location_warning">Lorsque Géolocalisation est sélectionné, nous collectons les données de localisation pour actualiser la météo, même lorsque l\'app est fermée ou non utilisée.\nNous n\'utiliserons pas ces données autrement que mentionné.</string>
-    <string name="settings_weather_provider_api">Fournisseur météo</string>
 
-    <string name="settings_weather_provider_open_weather" translatable="false">OpenWeatherMap.org</string>
-    <string name="settings_weather_provider_weatherbit" translatable="false">Weatherbit.io</string>
-    <string name="settings_weather_provider_weather_api" translatable="false">WeatherAPI.com</string>
-    <string name="settings_weather_provider_here" translatable="false">HERE.com</string>
-    <string name="settings_weather_provider_accuweather" translatable="false">AccuWeather.com</string>
-    <string name="settings_weather_provider_weather_gov" translatable="false">Weather.gov (USA)\nby National Weather Services</string>
-    <string name="settings_weather_provider_yr" translatable="false">YR.no/Met.no\nby Meteorologisk Institutt</string>
 
-    <string name="weather_provider_info_open_weather_title">Ce fournisseur météo a besoin d\'une\nclé API pour fonctionner correctement.</string>
-    <string name="weather_provider_info_weatherbit_title">Ce fournisseur météo a besoin d\'une\nclé API pour fonctionner correctement.</string>
-    <string name="weather_provider_info_weatherapi_title">Ce fournisseur météo a besoin d\'une\nclé API pour fonctionner correctement.</string>
-    <string name="weather_provider_info_here_title">Ce fournisseur météo a besoin d\'une\nclé API pour fonctionner correctement.</string>
-    <string name="weather_provider_info_accuweather_title">Ce fournisseur météo a besoin d\'une\nclé API pour fonctionner correctement.</string>
-    <string name="weather_provider_info_weather_gov_title">Ce fournisseur météo ne fonctionne que\npour les emplacements aux États-Unis.</string>
-    <string name="weather_provider_info_yr_title">Ce fournisseur météo n\'autorise que\nles températures en unité Celsius.</string>
 
-    <string name="weather_provider_info_open_weather_subtitle">Ouvrez le site web du fournisseur, créez un compte et copiez ici la clé par défaut.</string>
-    <string name="weather_provider_info_weatherbit_subtitle">Ouvrez le site web du fournisseur, créez un compte et copiez ici la clé par défaut.</string>
-    <string name="weather_provider_info_weatherapi_subtitle">Ouvrez le site web du fournisseur, créez un compte et copiez ici la clé par défaut.</string>
-    <string name="weather_provider_info_here_subtitle">Ouvrez le site web du fournisseur, créez un compte et copiez ici la clé par défaut.</string>
-    <string name="weather_provider_info_accuweather_subtitle">Ouvrez le site web du fournisseur, créez un compte et copiez ici la clé par défaut.</string>
-    <string name="weather_provider_info_weather_gov_subtitle">\n</string>
-    <string name="weather_provider_info_yr_subtitle">\n</string>
 
-    <string name="weather_provider_error_missing_key">Le fournisseur météo que vous avez sélectionné nécessite une clé API.</string>
+    <string name="weather_provider_error_missing_key">QWeather nécessite une clé API.</string>
     <string name="weather_provider_error_wrong_location">Localisation actuelle non supportée.</string>
     <string name="weather_provider_error_missing_location">Choisissez une localisation valide.</string>
-    <string name="weather_provider_error_expired_key">Il semble que votre clé API a expiré.</string>
-    <string name="weather_provider_error_invalid_key">Clé API invalide ou pas encore activée.</string>
-    <string name="weather_provider_error_misconfigured">Le fournisseur météo est mal configuré.</string>
+    <string name="weather_provider_error_invalid_key">La clé API QWeather est invalide ou pas encore activée.</string>
     <string name="weather_provider_error_connection">Erreur de connexion.</string>
-    <string name="weather_provider_error_generic">Erreur. Vérifiez la configuration du fournisseur météo.</string>
-    <string name="api_key_required_message">Compte requis</string>
-    <string name="us_only_message">USA uniquement</string>
-    <string name="celsius_only_message">Unité Celsius uniquement</string>
-    <string name="weather_select_a_provider">Sélectionner un fournisseur</string>
-    <string name="weather_provider_activity_subtitle">Sélectionnez un fournisseur météo dans la liste.\nCertains fournisseurs ont besoin d\'un\ncompte personnel gratuit pour fonctionner,\nmais ils sont généralement plus précis.</string>
+    <string name="weather_provider_error_generic">Une erreur est survenue lors de la mise à jour de la météo.</string>
 
     <string name="location_access_notification_channel_id" translatable="false">location-access</string>
     <string name="location_access_notification_channel_name">Service d\'actualisation de la météo</string>
@@ -332,7 +299,7 @@
     <string name="settings_title">Paramètres</string>
     <string name="style_header">Style</string>
     <string name="actions_header">Actions</string>
-    <string name="provider_header">Configuration</string>
+    <string name="provider_header">Service météo</string>
     <string name="appearance_header">Apparence</string>
     <string name="preferences_header">Préférences</string>
     <string name="settings_privacy_policy_title"><![CDATA[Avis légal et confidentialité]]></string>
@@ -378,4 +345,43 @@
     <string name="color_copied">Couleur copiée dans\nle presse-papiers.</string>
     <string name="error_copy_color">La couleur ne peut pas être copiée.</string>
     <string name="default_apps_settings_header">Apps par défaut</string>
+    <!-- QWeather: weather service configuration and errors -->
+    <string name="settings_weather_provider_api_host_title">Hôte API</string>
+    <string name="settings_qweather_not_configured">Clé API requise</string>
+    <string name="qweather_settings_info_title">Données météo fournies par QWeather.\nUne clé API personnelle est requise.</string>
+    <string name="qweather_settings_info_subtitle">Créez un projet dans la console QWeather, puis copiez l\'hôte API et la clé API ici.</string>
+    <string name="settings_qweather_android_restriction_title">Restriction d\'application Android</string>
+    <string name="settings_qweather_android_restriction_subtitle">Envoie le nom de package et le certificat de signature de cette version. À activer uniquement si la clé est restreinte à cette application dans la console QWeather.</string>
+    <string name="action_test">Tester</string>
+    <string name="action_testing">Test en cours\u2026</string>
+    <string name="qweather_check_ok">QWeather est joignable : %1$s, %2$s, %3$d heures de prévisions.</string>
+    <string name="weather_provider_error_quota_exceeded">Le quota QWeather est épuisé.</string>
+    <string name="weather_provider_error_rate_limit">Trop de requêtes, réessayez plus tard.</string>
+    <string name="weather_provider_error_forbidden">La requête a été refusée : vérifiez l\'hôte API et les droits de la clé.</string>
+    <string name="weather_provider_error_invalid_host">Cet hôte API n\'est pas valide pour ce compte, copiez l\'hôte API depuis la console QWeather.</string>
+    <string name="weather_provider_error_security_restriction">QWeather a refusé cette application. Activez ici la restriction d\'application Android et enregistrez le nom de package et le SHA-1 de cette version dans la console QWeather.</string>
+    <string name="weather_provider_error_host_not_found">L\'hôte API n\'a pas pu être résolu. Vérifiez le nom d\'hôte dans la console QWeather.</string>
+    <string name="weather_provider_error_timeout">La requête a expiré.</string>
+    <string name="weather_provider_error_empty_response">Le serveur a refusé la requête. L\'hôte API n\'est probablement pas celui attribué à ce compte : copiez-le depuis la console QWeather.</string>
+    <string name="settings_title_backup_restore">Sauvegarde et restauration</string>
+    <string name="settings_backup_restore_subtitle">Exportez ou importez votre configuration</string>
+    <string name="backup_activity_subtitle">Les sauvegardes sont de simples fichiers JSON, enregistrés où vous voulez. Le cache météo, le cache de localisation et la clé API n\'y figurent jamais.</string>
+    <string name="backup_export">Exporter la sauvegarde</string>
+    <string name="backup_export_subtitle">Enregistrer votre configuration dans un fichier</string>
+    <string name="backup_restore">Restaurer la sauvegarde</string>
+    <string name="backup_restore_subtitle">Charger une configuration depuis un fichier</string>
+    <string name="backup_export_success">Sauvegarde enregistrée.</string>
+    <string name="backup_export_failed">Impossible d\'écrire le fichier de sauvegarde.</string>
+    <string name="backup_restore_confirm_title">Restaurer la sauvegarde ?</string>
+    <string name="backup_restore_confirm_message">Créée : %1$s\nVersion de la sauvegarde : %2$d\nVersion de l\'application : %3$s\n\nVos réglages Another Widget actuels seront remplacés.</string>
+    <string name="backup_restore_success">Configuration restaurée, le widget a été actualisé.</string>
+    <string name="backup_restore_failed">Échec de la restauration. Vos réglages n\'ont pas été modifiés.</string>
+    <string name="backup_unknown_value">inconnue</string>
+    <string name="backup_error_not_json">Ce fichier n\'est pas du JSON lisible.</string>
+    <string name="backup_error_not_a_backup">Ce fichier n\'est pas une sauvegarde Another Widget.</string>
+    <string name="backup_error_unsupported_version">Cette sauvegarde a été créée par une version plus récente de l\'application.</string>
+    <string name="backup_error_empty">Cette sauvegarde ne contient aucun réglage.</string>
+    <string name="backup_error_unreadable">Impossible de lire ce fichier.</string>
+    <string name="action_cancel">Annuler</string>
+    <string name="action_restore">Restaurer</string>
 </resources>

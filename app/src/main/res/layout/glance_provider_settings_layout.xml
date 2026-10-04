@@ -30,8 +30,7 @@
                     style="@style/AnotherWidget.Settings.Title"
                     android:gravity="start"
                     android:id="@+id/title"
-                    android:textAlignment="viewStart"
-                    android:text="@string/settings_weather_provider_open_weather"/>
+                    android:textAlignment="viewStart"/>
                 <androidx.appcompat.widget.AppCompatTextView
                     android:textAppearance="@style/AnotherWidget.Settings.Subtitle"
                     app:textAllCaps="false"

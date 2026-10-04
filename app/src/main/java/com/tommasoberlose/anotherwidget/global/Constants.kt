@@ -1,9 +1,32 @@
 package com.tommasoberlose.anotherwidget.global
 
 object Constants {
+    // Single tag for the weather/location decision path, so the whole sequence can be followed with
+    // one filter. Credentials are never logged.
+    const val LOG_TAG = "QWeather"
+
     const val RESULT_CODE_CUSTOM_LOCATION = 45
     const val RESULT_APP_NAME = "RESULT_APP_NAME"
     const val RESULT_APP_PACKAGE = "RESULT_APP_PACKAGE"
+
+    // A cached location older than this is refreshed before the next weather request. It only
+    // triggers a location refresh: an older coordinate stays usable, see LocationHelper.
+    const val LOCATION_CACHE_TTL = 6 * 60 * 60 * 1000L
+
+    // Upper bound for a single location fix, so the foreground service never waits on GPS forever.
+    const val LOCATION_ACQUISITION_TIMEOUT = 15 * 1000L
+
+    // The widget advances every hour from the cached hourly forecast; a fresh forecast is only
+    // requested once the cache is older than this.
+    const val WEATHER_CACHE_TTL = 3 * 60 * 60 * 1000L
+
+    // A cached hour further from "now" than this is not displayed: an outdated forecast must not be
+    // presented as the current weather.
+    const val WEATHER_FORECAST_MAX_DRIFT = 3 * 60 * 60 * 1000L
+
+    // Moving further than this from where the forecast was fetched makes it useless (weather is a
+    // city scale quantity); normal GPS jitter stays far below it.
+    const val WEATHER_LOCATION_CHANGE_THRESHOLD = 10_000f
 
     const val CUSTOM_FONT_GOOGLE_SANS = 1
     const val CUSTOM_FONT_DOWNLOADED = 2
@@ -43,21 +66,6 @@ object Constants {
         LOW(0),
         DEFAULT(1),
         HIGH(2)
-    }
-
-    enum class WeatherProvider(val rawValue: Int) {
-        OPEN_WEATHER(0),
-        WEATHER_BIT(1),
-        WEATHER_API(2),
-        HERE(3),
-        ACCUWEATHER(4),
-        WEATHER_GOV(5),
-        YR(6);
-
-        companion object {
-            private val map = WeatherProvider.values().associateBy(WeatherProvider::rawValue)
-            fun fromInt(type: Int) = map[type]
-        }
     }
 
     enum class GlanceNotificationTimer(val rawValue: Int) {

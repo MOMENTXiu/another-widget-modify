@@ -113,11 +113,7 @@
     <string name="show_weather_not_visible">La información del clima está oculta</string>
     <string name="settings_weather_app_title">Tocar en el clima abre</string>
     <string name="settings_weather_provider_api_key_title">Clave de API del clima</string>
-    <string name="settings_weather_provider_api_key_subtitle_all_set">El proveedor del clima está correctamente configurado</string>
-    <string name="settings_weather_provider_api_key_subtitle_not_set">El proveedor del clima debe ser configurado</string>
-    <string name="api_key_hint">Clave de API de OpenWeather</string>
     <string name="default_weather_app">Clima de Google</string>
-    <string name="weather_warning">El clima de Google Awareness está obsoleto. ahora se requiere de una clave de API de OpenWeather para mostrar el clima en el widget.</string>
     <string name="api_key_title_1">Registrarse para obtener una cuenta de OpenWeather</string>
     <string name="api_key_subtitle_1">Registra una cuenta gratis en OpenWeather. Solo tomará unos minutos.</string>
     <string name="api_key_title_2">Copia tu clave de API</string>
@@ -129,45 +125,16 @@
     <string name="settings_weather_icon_pack_title">Paquete de iconos</string>
     <string name="settings_weather_icon_pack_default">Paquete de iconos %d</string>
     <string name="background_location_warning">Cuando el GPS está encendido, recolectamos los datos de la ubicación para actualizar la información del clima cuando la app está cerrada o no está en uso.\nNo usaremos esos datos en caso contrario.</string>
-    <string name="settings_weather_provider_api">Proveedor del clima</string>
 
-    <string name="settings_weather_provider_open_weather" translatable="false">OpenWeatherMap.org</string>
-    <string name="settings_weather_provider_weatherbit" translatable="false">Weatherbit.io</string>
-    <string name="settings_weather_provider_weather_api" translatable="false">WeatherAPI.com</string>
-    <string name="settings_weather_provider_here" translatable="false">HERE.com</string>
-    <string name="settings_weather_provider_accuweather" translatable="false">AccuWeather.com</string>
-    <string name="settings_weather_provider_weather_gov" translatable="false">Weather.gov (USA)\nby National Weather Services</string>
-    <string name="settings_weather_provider_yr" translatable="false">YR.no/Met.no\nby Meteorologisk Institutt</string>
 
-    <string name="weather_provider_info_open_weather_title">Este proveedor del clima necesita\nuna clave de API para funcionar correctamente.</string>
-    <string name="weather_provider_info_weatherbit_title">Este proveedor del clima necesita\nuna clave de API para funcionar correctamente.</string>
-    <string name="weather_provider_info_weatherapi_title">Este proveedor del clima necesita\nuna clave de API para funcionar correctamente.</string>
-    <string name="weather_provider_info_here_title">Este proveedor del clima necesita\nuna clave de API para funcionar correctamente.</string>
-    <string name="weather_provider_info_accuweather_title">Este proveedor del clima necesita\nuna clave de API para funcionar correctamente.</string>
-    <string name="weather_provider_info_weather_gov_title">Este proveedor del clima solo funciona\npara ubicaciones dentro de EEUU.</string>
-    <string name="weather_provider_info_yr_title">Este proveedor del clima solo permite\nla unidad de temperatura Celsius.</string>
 
-    <string name="weather_provider_info_open_weather_subtitle">Abre el sitio web del proveedor, crea una cuenta personal y copia aquí la clave predeterminada.</string>
-    <string name="weather_provider_info_weatherbit_subtitle">Abre el sitio web del proveedor, crea una cuenta personal y copia aquí la clave predeterminada.</string>
-    <string name="weather_provider_info_weatherapi_subtitle">Abre el sitio web del proveedor, crea una cuenta personal y copia aquí la clave predeterminada.</string>
-    <string name="weather_provider_info_here_subtitle">Abre el sitio web del proveedor, crea una cuenta personal y copia aquí la clave predeterminada.</string>
-    <string name="weather_provider_info_accuweather_subtitle">Abre el sitio web del proveedor, crea una cuenta personal y copia aquí la clave predeterminada.</string>
-    <string name="weather_provider_info_weather_gov_subtitle">\n</string>
-    <string name="weather_provider_info_yr_subtitle">\n</string>
 
-    <string name="weather_provider_error_missing_key">El proveedor del clima que has seleccionado requiere de una clave de API.</string>
+    <string name="weather_provider_error_missing_key">QWeather necesita una clave de API.</string>
     <string name="weather_provider_error_wrong_location">La ubicación actual no está soportada.</string>
     <string name="weather_provider_error_missing_location">Por favor selecciona una ubicación válida.</string>
-    <string name="weather_provider_error_expired_key">Parece que tu clave de API ha expirado.</string>
-    <string name="weather_provider_error_invalid_key">Clave de API no válida, o aún no activada.</string>
-    <string name="weather_provider_error_misconfigured">El proveedor del clima está mal configurado.</string>
+    <string name="weather_provider_error_invalid_key">La clave de API de QWeather no es válida o aún no está activada.</string>
     <string name="weather_provider_error_connection">Error de conexión.</string>
-    <string name="weather_provider_error_generic">Algo salió mal, verifica la configuración del proveedor del clima.</string>
-    <string name="api_key_required_message">Cuenta requerida</string>
-    <string name="us_only_message">Solo EEUU</string>
-    <string name="celsius_only_message">Solo Unidad Métrica</string>
-    <string name="weather_select_a_provider">Seleccionar un proveedor</string>
-    <string name="weather_provider_activity_subtitle">Elige un proveedor del clima de la lista.\nAlgunos proveedores necesitan una cuenta personal gratuita,\npero suelen ser más precisos.</string>
+    <string name="weather_provider_error_generic">Algo salió mal al actualizar el clima.</string>
 
     <!-- Clock -->
     <string name="settings_clock_title">Reloj</string>
@@ -296,7 +263,7 @@
     <string name="settings_title">Ajustes</string>
     <string name="style_header">Estilo</string>
     <string name="actions_header">Acciones</string>
-    <string name="provider_header">Proveedor</string>
+    <string name="provider_header">Servicio meteorológico</string>
     <string name="appearance_header">Apariencia</string>
     <string name="preferences_header">Preferencias</string>
     <string name="settings_privacy_policy_title"><![CDATA[Legal & Privacy]]></string>
@@ -320,4 +287,43 @@
     <string name="nothing">Nada</string>
     <string name="action_dismiss">Descartar</string>
     <string name="action_accept">Aceptar</string>
+    <!-- QWeather: weather service configuration and errors -->
+    <string name="settings_weather_provider_api_host_title">Host de API</string>
+    <string name="settings_qweather_not_configured">Se requiere clave de API</string>
+    <string name="qweather_settings_info_title">Datos meteorológicos de QWeather.\nSe requiere una clave de API propia.</string>
+    <string name="qweather_settings_info_subtitle">Crea un proyecto en la consola de QWeather y copia aquí el host de API y la clave de API.</string>
+    <string name="settings_qweather_android_restriction_title">Restricción de app Android</string>
+    <string name="settings_qweather_android_restriction_subtitle">Envía el nombre del paquete y el certificado de firma de esta compilación. Actívalo solo si la clave está restringida a esta app en la consola de QWeather.</string>
+    <string name="action_test">Probar</string>
+    <string name="action_testing">Probando\u2026</string>
+    <string name="qweather_check_ok">QWeather responde: %1$s, %2$s, %3$d horas de pronóstico.</string>
+    <string name="weather_provider_error_quota_exceeded">Se ha agotado la cuota de QWeather.</string>
+    <string name="weather_provider_error_rate_limit">Demasiadas solicitudes, inténtalo de nuevo más tarde.</string>
+    <string name="weather_provider_error_forbidden">La solicitud fue rechazada: revisa el host de API y los permisos de la clave.</string>
+    <string name="weather_provider_error_invalid_host">Este host de API no es válido para la cuenta, copia el host de API desde la consola de QWeather.</string>
+    <string name="weather_provider_error_security_restriction">QWeather rechazó esta app. Activa aquí la restricción de app Android y registra el nombre del paquete y el SHA-1 de esta compilación en la consola de QWeather.</string>
+    <string name="weather_provider_error_host_not_found">No se pudo resolver el host de API. Revisa el nombre del host en la consola de QWeather.</string>
+    <string name="weather_provider_error_timeout">Se agotó el tiempo de espera de la solicitud.</string>
+    <string name="weather_provider_error_empty_response">El servidor rechazó la solicitud. Probablemente el host de API no es el asignado a esta cuenta: cópialo desde la consola de QWeather.</string>
+    <string name="settings_title_backup_restore">Copia de seguridad y restauración</string>
+    <string name="settings_backup_restore_subtitle">Exporta o importa tu configuración</string>
+    <string name="backup_activity_subtitle">Las copias son archivos JSON normales, guardados donde tú elijas. La caché del clima, la de ubicación y la clave de API nunca se incluyen.</string>
+    <string name="backup_export">Exportar copia</string>
+    <string name="backup_export_subtitle">Guarda tu configuración en un archivo</string>
+    <string name="backup_restore">Restaurar copia</string>
+    <string name="backup_restore_subtitle">Carga una configuración desde un archivo</string>
+    <string name="backup_export_success">Copia guardada.</string>
+    <string name="backup_export_failed">No se pudo escribir el archivo de copia.</string>
+    <string name="backup_restore_confirm_title">¿Restaurar la copia?</string>
+    <string name="backup_restore_confirm_message">Creada: %1$s\nVersión de la copia: %2$d\nVersión de la app: %3$s\n\nSe reemplazarán tus ajustes actuales de Another Widget.</string>
+    <string name="backup_restore_success">Configuración restaurada; el widget se ha actualizado.</string>
+    <string name="backup_restore_failed">La restauración falló. Tus ajustes no se han modificado.</string>
+    <string name="backup_unknown_value">desconocida</string>
+    <string name="backup_error_not_json">El archivo no es JSON legible.</string>
+    <string name="backup_error_not_a_backup">El archivo no es una copia de Another Widget.</string>
+    <string name="backup_error_unsupported_version">Esta copia la creó una versión más reciente de la app.</string>
+    <string name="backup_error_empty">La copia no contiene ajustes.</string>
+    <string name="backup_error_unreadable">No se pudo leer el archivo.</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_restore">Restaurar</string>
 </resources>

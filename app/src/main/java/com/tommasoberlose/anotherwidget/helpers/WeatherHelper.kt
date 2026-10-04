@@ -2,15 +2,18 @@ package com.tommasoberlose.anotherwidget.helpers
 
 import android.Manifest
 import android.content.Context
+import android.util.Log
 import com.chibatching.kotpref.Kotpref
 import com.tommasoberlose.anotherwidget.R
 import com.tommasoberlose.anotherwidget.global.Constants
 import com.tommasoberlose.anotherwidget.global.Preferences
 import com.tommasoberlose.anotherwidget.network.WeatherNetworkApi
 import com.tommasoberlose.anotherwidget.services.LocationService
+import com.tommasoberlose.anotherwidget.ui.fragments.MainFragment
 import com.tommasoberlose.anotherwidget.ui.widgets.MainWidget
 import com.tommasoberlose.anotherwidget.utils.checkGrantedPermission
 import com.tommasoberlose.anotherwidget.utils.isDarkTheme
+import org.greenrobot.eventbus.EventBus
 
 
 /**
@@ -19,13 +22,43 @@ import com.tommasoberlose.anotherwidget.utils.isDarkTheme
 
 object WeatherHelper {
 
+    // Rendered as the generic "unknown weather" icon: used when a provider returns a condition we
+    // have no icon for, instead of failing the whole update.
+    const val UNKNOWN_ICON = "unknown"
+
     suspend fun updateWeather(context: Context) {
         Kotpref.init(context)
         val networkApi = WeatherNetworkApi(context)
-        if (Preferences.customLocationAdd != "") {
-            networkApi.updateWeather()
-        } else if (context.checkGrantedPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
-            LocationService.requestNewLocation(context)
+        when {
+            // A manually configured location always wins and never touches the location providers.
+            Preferences.customLocationAdd != "" -> {
+                Log.d(Constants.LOG_TAG, "using the manual location")
+                networkApi.updateWeather()
+            }
+
+            // Recent enough coordinates: refresh the weather without activating any location provider.
+            LocationHelper.isCachedLocationFresh() -> {
+                Log.d(Constants.LOG_TAG, "using the cached location (${LocationHelper.describeAge()})")
+                networkApi.updateWeather()
+            }
+
+            // Stale or missing coordinates: try to refresh them, falling back to the cached ones.
+            context.checkGrantedPermission(Manifest.permission.ACCESS_FINE_LOCATION) -> {
+                Log.d(Constants.LOG_TAG, "location cache stale or absent (${LocationHelper.describeAge()}), refreshing")
+                LocationService.requestNewLocation(context)
+            }
+
+            // No permission, but an outdated coordinate still beats no weather at all.
+            LocationHelper.hasCachedLocation() -> {
+                Log.d(Constants.LOG_TAG, "location permission missing, reusing the stored coordinates (${LocationHelper.describeAge()})")
+                networkApi.updateWeather()
+            }
+
+            else -> {
+                Log.d(Constants.LOG_TAG, "no location available at all")
+                Preferences.weatherProviderLocationError = context.getString(R.string.weather_provider_error_missing_location)
+                EventBus.getDefault().post(MainFragment.UpdateUiMessageEvent())
+            }
         }
     }
 
@@ -34,80 +67,6 @@ object WeatherHelper {
         Preferences.remove(Preferences::weatherRealTempUnit)
         Preferences.remove(Preferences::weatherIcon)
         MainWidget.updateWidget(context)
-    }
-
-    fun getProviderName(context: Context, provider: Constants.WeatherProvider = Constants.WeatherProvider.fromInt(Preferences.weatherProvider)!!): String {
-        return context.getString(when(provider) {
-            Constants.WeatherProvider.OPEN_WEATHER -> R.string.settings_weather_provider_open_weather
-            Constants.WeatherProvider.WEATHER_BIT -> R.string.settings_weather_provider_weatherbit
-            Constants.WeatherProvider.WEATHER_API -> R.string.settings_weather_provider_weather_api
-            Constants.WeatherProvider.HERE -> R.string.settings_weather_provider_here
-            Constants.WeatherProvider.ACCUWEATHER -> R.string.settings_weather_provider_accuweather
-            Constants.WeatherProvider.WEATHER_GOV -> R.string.settings_weather_provider_weather_gov
-            Constants.WeatherProvider.YR -> R.string.settings_weather_provider_yr
-        })
-    }
-
-    fun getProviderInfoTitle(context: Context, provider: Constants.WeatherProvider? = Constants.WeatherProvider.fromInt(Preferences.weatherProvider)!!): String {
-        return context.getString(when(provider) {
-            Constants.WeatherProvider.OPEN_WEATHER -> R.string.weather_provider_info_open_weather_title
-            Constants.WeatherProvider.WEATHER_BIT -> R.string.weather_provider_info_weatherbit_title
-            Constants.WeatherProvider.WEATHER_API -> R.string.weather_provider_info_weatherapi_title
-            Constants.WeatherProvider.HERE -> R.string.weather_provider_info_here_title
-            Constants.WeatherProvider.ACCUWEATHER -> R.string.weather_provider_info_accuweather_title
-            Constants.WeatherProvider.WEATHER_GOV -> R.string.weather_provider_info_weather_gov_title
-            Constants.WeatherProvider.YR -> R.string.weather_provider_info_yr_title
-            else -> R.string.nothing
-        })
-    }
-
-    fun getProviderInfoSubtitle(context: Context, provider: Constants.WeatherProvider? = Constants.WeatherProvider.fromInt(Preferences.weatherProvider)!!): String {
-        return context.getString(when(provider) {
-            Constants.WeatherProvider.OPEN_WEATHER -> R.string.weather_provider_info_open_weather_subtitle
-            Constants.WeatherProvider.WEATHER_BIT -> R.string.weather_provider_info_weatherbit_subtitle
-            Constants.WeatherProvider.WEATHER_API -> R.string.weather_provider_info_weatherapi_subtitle
-            Constants.WeatherProvider.HERE -> R.string.weather_provider_info_here_subtitle
-            Constants.WeatherProvider.ACCUWEATHER -> R.string.weather_provider_info_accuweather_subtitle
-            Constants.WeatherProvider.WEATHER_GOV -> R.string.weather_provider_info_weather_gov_subtitle
-            Constants.WeatherProvider.YR -> R.string.weather_provider_info_yr_subtitle
-            else -> R.string.nothing
-        })
-    }
-
-    fun getProviderLink(provider: Constants.WeatherProvider? = Constants.WeatherProvider.fromInt(Preferences.weatherProvider)!!): String {
-        return when(provider) {
-            Constants.WeatherProvider.OPEN_WEATHER -> "https://home.openweathermap.org/users/sign_in"
-            Constants.WeatherProvider.WEATHER_BIT -> "https://www.weatherbit.io/account/login"
-            Constants.WeatherProvider.WEATHER_API -> "https://www.weatherapi.com/login.aspx"
-            Constants.WeatherProvider.HERE -> "https://developer.here.com/login"
-            Constants.WeatherProvider.ACCUWEATHER -> "https://developer.accuweather.com/user/login"
-            Constants.WeatherProvider.WEATHER_GOV -> "http://www.weather.gov/"
-            Constants.WeatherProvider.YR -> "https://www.yr.no/"
-            else -> ""
-        }
-    }
-
-    fun isKeyRequired(provider: Constants.WeatherProvider? = Constants.WeatherProvider.fromInt(Preferences.weatherProvider)!!): Boolean = when (provider) {
-        Constants.WeatherProvider.OPEN_WEATHER,
-        Constants.WeatherProvider.WEATHER_BIT,
-        Constants.WeatherProvider.WEATHER_API,
-        Constants.WeatherProvider.HERE,
-        Constants.WeatherProvider.ACCUWEATHER -> true
-
-        Constants.WeatherProvider.WEATHER_GOV,
-        Constants.WeatherProvider.YR -> false
-        else -> true
-    }
-
-    fun getApiKey(provider: Constants.WeatherProvider? = Constants.WeatherProvider.fromInt(Preferences.weatherProvider)!!): String = when (provider) {
-        Constants.WeatherProvider.OPEN_WEATHER -> Preferences.weatherProviderApiOpen
-        Constants.WeatherProvider.WEATHER_BIT -> Preferences.weatherProviderApiWeatherBit
-        Constants.WeatherProvider.WEATHER_API -> Preferences.weatherProviderApiWeatherApi
-        Constants.WeatherProvider.HERE -> Preferences.weatherProviderApiHere
-        Constants.WeatherProvider.ACCUWEATHER -> Preferences.weatherProviderApiAccuweather
-        Constants.WeatherProvider.WEATHER_GOV -> ""
-        Constants.WeatherProvider.YR -> ""
-        else -> ""
     }
 
     fun getWeatherIconResource(context: Context, icon: String, style: Int = Preferences.weatherIconPack): Int {
@@ -313,174 +272,48 @@ object WeatherHelper {
         }
     }
 
-    fun getWeatherGovIcon(iconString: String, isDaytime: Boolean): String = when {
-        iconString.contains("skc") -> "01"
-        iconString.contains("few") -> "02"
-        iconString.contains("sct") -> "03"
-        iconString.contains("bkn") -> "04"
-        iconString.contains("ovc") -> "04"
-        iconString.contains("wind_skc") -> "01"
-        iconString.contains("wind_few") -> "02"
-        iconString.contains("wind_sct") -> "03"
-        iconString.contains("wind_bkn") -> "04"
-        iconString.contains("wind_ovc") -> "04"
-        iconString.contains("snow") -> "13"
-        iconString.contains("rain_snow") -> "81"
-        iconString.contains("rain_sleet") -> "81"
-        iconString.contains("snow_sleet") -> "81"
-        iconString.contains("fzra") -> "81"
-        iconString.contains("rain_fzra") -> "81"
-        iconString.contains("snow_fzra") -> "81"
-        iconString.contains("sleet") -> "81"
-        iconString.contains("rain") -> "10"
-        iconString.contains("rain_showers") -> "10"
-        iconString.contains("rain_showers_hi") -> "10"
-        iconString.contains("tsra") -> "82"
-        iconString.contains("tsra_sct") -> "82"
-        iconString.contains("tsra_hi") -> "82"
-        iconString.contains("tornado") -> "80"
-        iconString.contains("hurricane") -> "80"
-        iconString.contains("tropical_storm") -> "09"
-        iconString.contains("dust") -> "Dust"
-        iconString.contains("smoke") -> "Smoke"
-        iconString.contains("haze") -> "50"
-        iconString.contains("hot") -> "01"
-        iconString.contains("cold") -> "13"
-        iconString.contains("blizzard") -> "80"
-        iconString.contains("fog") -> "82"
-        else -> ""
-    } + if (isDaytime) "d" else "n"
+    /**
+     * Maps a QWeather icon code to the internal icon identifier used by the icon packs. The 150-153,
+     * 350, 351, 456 and 457 codes are the night variants of the condition they belong to; every
+     * other condition only exists once, so the day/night art is picked from the current hour.
+     */
+    fun getQWeatherIcon(iconCode: String, isDaytime: Boolean): String {
+        val code = iconCode.trim().toIntOrNull() ?: return UNKNOWN_ICON
 
-    fun getWeatherBitIcon(iconString: String): String = when {
-        iconString.contains("t01") -> "11"
-        iconString.contains("t02") -> "09"
-        iconString.contains("t03") -> "09"
-        iconString.contains("t04") -> "09"
-        iconString.contains("t05") -> "09"
-        iconString.contains("d01") -> "10"
-        iconString.contains("d02") -> "10"
-        iconString.contains("d03") -> "10"
-        iconString.contains("r01") -> "10"
-        iconString.contains("r02") -> "10"
-        iconString.contains("r03") -> "10"
-        iconString.contains("f01") -> "10"
-        iconString.contains("r04") -> "10"
-        iconString.contains("r05") -> "10"
-        iconString.contains("r06") -> "10"
-        iconString.contains("s01") -> "13"
-        iconString.contains("s02") -> "13"
-        iconString.contains("s03") -> "13"
-        iconString.contains("s04") -> "81"
-        iconString.contains("s05") -> "90"
-        iconString.contains("s06") -> "13"
-        iconString.contains("a01") -> "82"
-        iconString.contains("a02") -> "82"
-        iconString.contains("a03") -> "82"
-        iconString.contains("a04") -> "82"
-        iconString.contains("a05") -> "82"
-        iconString.contains("a06") -> "82"
-        iconString.contains("c01") -> "01"
-        iconString.contains("c02") -> "02"
-        iconString.contains("c03") -> "04"
-        iconString.contains("c04") -> "04"
-        else -> ""
-    } + if (iconString.contains("d")) "d" else "n"
+        val suffix = when {
+            code in 150..153 || code == 350 || code == 351 || code == 456 || code == 457 -> "n"
+            isDaytime -> "d"
+            else -> "n"
+        }
 
-    fun getWeatherApiIcon(icon: Int, isDaytime: Boolean): String = when(icon) {
-        1000 -> "01"
-        1003 -> "02"
-        1006 -> "03"
-        1009 -> "04"
-        1030 -> "82"
-        1063 -> "10"
-        1066 -> "10"
-        1069 -> "10"
-        1072 -> "81"
-        1087 -> "11"
-        1114 -> "13"
-        1117 -> "09"
-        1135 -> "82"
-        1147 -> "82"
-        1150 -> "10"
-        1153 -> "10"
-        1168 -> "10"
-        1171 -> "10"
-        1180 -> "10"
-        1183 -> "10"
-        1186 -> "10"
-        1189 -> "10"
-        1192 -> "10"
-        1195 -> "10"
-        1198 -> "81"
-        1201 -> "81"
-        1204 -> "13"
-        1207 -> "13"
-        1210 -> "13"
-        1213 -> "13"
-        1216 -> "13"
-        1219 -> "13"
-        1222 -> "13"
-        1225 -> "13"
-        1237 -> "13"
-        1240 -> "10"
-        1243 -> "10"
-        1246 -> "10"
-        1249 -> "13"
-        1252 -> "13"
-        1255 -> "13"
-        1258 -> "13"
-        1261 -> "13"
-        1264 -> "13"
-        1273 -> "09"
-        1276 -> "09"
-        1279 -> "13"
-        1282 -> "13"
-        else -> ""
-    } + if (isDaytime) "d" else "n"
+        val base = when (code) {
+            100, 150 -> "01"                 // Clear
+            102, 103, 152, 153 -> "02"       // Few clouds / partly cloudy
+            101, 151 -> "03"                 // Cloudy
+            104 -> "04"                      // Overcast
 
-    fun getYRIcon(iconCode: String, isDaytime: Boolean): String = when {
-        iconCode.contains("clearsky") -> "01"
-        iconCode.contains("cloudy") -> "04"
-        iconCode.contains("fair") -> "02"
-        iconCode.contains("fog") -> "82"
-        iconCode.contains("heavyrain") -> "10"
-        iconCode.contains("heavyrainandthunder") -> "11"
-        iconCode.contains("heavyrainshowers") -> "10"
-        iconCode.contains("heavyrainshowersandthunder") -> "11"
-        iconCode.contains("heavysleet") -> "10"
-        iconCode.contains("heavysleetandthunder") -> "11"
-        iconCode.contains("heavysleetshowers") -> "10"
-        iconCode.contains("heavysleetshowersandthunder") -> "11"
-        iconCode.contains("heavysnow") -> "13"
-        iconCode.contains("heavysnowandthunder") -> "13"
-        iconCode.contains("heavysnowshowers") -> "13"
-        iconCode.contains("heavysnowshowersandthunder") -> "13"
-        iconCode.contains("lightrain") -> "10"
-        iconCode.contains("lightrainandthunder") -> "11"
-        iconCode.contains("lightrainshowers") -> "10"
-        iconCode.contains("lightrainshowersandthunder") -> "11"
-        iconCode.contains("lightsleet") -> "10"
-        iconCode.contains("lightsleetandthunder") -> "11"
-        iconCode.contains("lightsleetshowers") -> "10"
-        iconCode.contains("lightsnow") -> "13"
-        iconCode.contains("lightsnowandthunder") -> "13"
-        iconCode.contains("lightsnowshowers") -> "13"
-        iconCode.contains("lightssleetshowersandthunder") -> "81"
-        iconCode.contains("lightssnowshowersandthunder") -> "81"
-        iconCode.contains("partlycloudy") -> "03"
-        iconCode.contains("rain") -> "10"
-        iconCode.contains("rainandthunder") -> "11"
-        iconCode.contains("rainshowers") -> "10"
-        iconCode.contains("rainshowersandthunder") -> "11"
-        iconCode.contains("sleet") -> "10"
-        iconCode.contains("sleetandthunder") -> "11"
-        iconCode.contains("sleetshowers") -> "10"
-        iconCode.contains("sleetshowersandthunder") -> "11"
-        iconCode.contains("snow") -> "13"
-        iconCode.contains("snowandthunder") -> "13"
-        iconCode.contains("snowshowers") -> "13"
-        iconCode.contains("snowshowersandthunder") -> "13"
-        else -> ""
-    } + if (isDaytime) "d" else "n"
+            in 200..213 -> "80"              // Wind
+
+            in 300..301, 350, 351 -> "09"                                // Shower rain
+            in 305..306, 309, in 314..315, 399 -> "10"                   // Rain
+            in 307..308, in 310..312, in 316..318 -> "09"                // Heavy rain
+            in 302..304 -> "11"                                                // Thunderstorm
+            313 -> "81"                                                        // Freezing rain
+
+            in 400..403, in 407..410, 499 -> "13"  // Snow
+            in 404..406, 456, 457 -> "81"          // Sleet / rain and snow
+
+            500, 501, in 507..510, 515 -> "82"  // Fog
+            in 502..504, in 511..514 -> "50"    // Haze
+            505, 506 -> "50"                    // Dust / sand
+
+            900 -> "01"                      // Hot
+            901 -> "13"                      // Cold
+
+            else -> return UNKNOWN_ICON
+        }
+
+        return base + suffix
+    }
 
 }

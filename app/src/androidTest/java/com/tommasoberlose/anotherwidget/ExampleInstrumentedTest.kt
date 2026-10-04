@@ -17,8 +17,9 @@ import org.junit.Assert.*
 class ExampleInstrumentedTest {
   @Test
   fun useAppContext() {
-    // Context of the app under test.
+    // Context of the app under test. Compared against the built application id, which this fork
+    // deliberately changes so it can be installed next to the Play Store build.
     val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-    assertEquals("com.tommasoberlose.anotherwidget", appContext.packageName)
+    assertEquals(BuildConfig.APPLICATION_ID, appContext.packageName)
   }
 }

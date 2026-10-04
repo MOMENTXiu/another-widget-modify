@@ -30,6 +30,7 @@ import com.tommasoberlose.anotherwidget.helpers.ActiveNotificationsHelper
 import com.tommasoberlose.anotherwidget.helpers.CalendarHelper
 import com.tommasoberlose.anotherwidget.helpers.MediaPlayerHelper
 import com.tommasoberlose.anotherwidget.helpers.WeatherHelper
+import com.tommasoberlose.anotherwidget.ui.activities.settings.BackupRestoreActivity
 import com.tommasoberlose.anotherwidget.ui.activities.settings.IntegrationsActivity
 import com.tommasoberlose.anotherwidget.ui.activities.MainActivity
 import com.tommasoberlose.anotherwidget.ui.activities.settings.SupportDevActivity
@@ -156,6 +157,10 @@ class SettingsFragment : Fragment() {
 
         binding.actionIntegrations.setOnClickListener {
             startActivity(Intent(requireContext(), IntegrationsActivity::class.java))
+        }
+
+        binding.actionBackupRestore.setOnClickListener {
+            startActivity(Intent(requireContext(), BackupRestoreActivity::class.java))
         }
 
         binding.actionChangeTheme.setOnClickListener {

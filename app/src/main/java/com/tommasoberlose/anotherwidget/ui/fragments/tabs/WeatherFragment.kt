@@ -22,19 +22,19 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import com.tommasoberlose.anotherwidget.R
 import com.tommasoberlose.anotherwidget.components.BottomSheetMenu
+import com.tommasoberlose.anotherwidget.components.BottomSheetQWeatherSettings
 import com.tommasoberlose.anotherwidget.components.IconPackSelector
 import com.tommasoberlose.anotherwidget.components.MaterialBottomSheetDialog
 import com.tommasoberlose.anotherwidget.databinding.FragmentTabWeatherBinding
 import com.tommasoberlose.anotherwidget.global.Constants
 import com.tommasoberlose.anotherwidget.global.Preferences
-import com.tommasoberlose.anotherwidget.global.RequestCode
 import com.tommasoberlose.anotherwidget.helpers.SettingsStringHelper
 import com.tommasoberlose.anotherwidget.helpers.WeatherHelper
+import com.tommasoberlose.anotherwidget.network.repository.QWeatherAuth
 import com.tommasoberlose.anotherwidget.receivers.WeatherReceiver
 import com.tommasoberlose.anotherwidget.ui.activities.tabs.ChooseApplicationActivity
 import com.tommasoberlose.anotherwidget.ui.activities.tabs.CustomLocationActivity
 import com.tommasoberlose.anotherwidget.ui.activities.MainActivity
-import com.tommasoberlose.anotherwidget.ui.activities.tabs.WeatherProviderActivity
 import com.tommasoberlose.anotherwidget.ui.viewmodels.MainViewModel
 import com.tommasoberlose.anotherwidget.ui.widgets.MainWidget
 import com.tommasoberlose.anotherwidget.utils.checkGrantedPermission
@@ -78,6 +78,8 @@ class WeatherFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         setupListener()
 
+        updateQWeatherSettingsLabel()
+
         binding.scrollView.viewTreeObserver.addOnScrollChangedListener {
             viewModel.fragmentScrollY.value = binding.scrollView.scrollY
         }
@@ -87,13 +89,6 @@ class WeatherFragment : Fragment() {
         viewModel: MainViewModel
     ) {
         binding.isWeatherVisible = Preferences.showWeather
-
-        viewModel.weatherProvider.observe(viewLifecycleOwner) {
-            maintainScrollPosition {
-                binding.labelWeatherProvider.text = WeatherHelper.getProviderName(requireContext(), Constants.WeatherProvider.fromInt(it)!!)
-                checkWeatherProviderConfig()
-            }
-        }
 
         viewModel.weatherProviderError.observe(viewLifecycleOwner) {
             checkWeatherProviderConfig()
@@ -148,6 +143,14 @@ class WeatherFragment : Fragment() {
         }
     }
 
+    private fun updateQWeatherSettingsLabel() {
+        binding.labelQweatherSettings.text = if (QWeatherAuth.isConfigured()) {
+            Preferences.weatherProviderQWeatherHost.ifBlank { QWeatherAuth.DEFAULT_API_HOST }
+        } else {
+            getString(R.string.settings_qweather_not_configured)
+        }
+    }
+
     private fun checkWeatherProviderConfig() {
         binding.weatherProviderError.isVisible = Preferences.showWeather && Preferences.weatherProviderError != "" && Preferences.weatherProviderError != "-"
         binding.weatherProviderError.text = Preferences.weatherProviderError
@@ -157,11 +160,13 @@ class WeatherFragment : Fragment() {
     }
 
     private fun setupListener() {
-        binding.actionWeatherProvider.setOnClickListener {
-            startActivityForResult(
-                Intent(requireContext(), WeatherProviderActivity::class.java),
-                RequestCode.WEATHER_PROVIDER_REQUEST_CODE.code
-            )
+        binding.actionQweatherSettings.setOnClickListener {
+            BottomSheetQWeatherSettings(requireContext()) {
+                updateQWeatherSettingsLabel()
+                viewLifecycleOwner.lifecycleScope.launch {
+                    WeatherHelper.updateWeather(requireContext())
+                }
+            }.show()
         }
 
         binding.actionCustomLocation.setOnClickListener {
@@ -207,9 +212,6 @@ class WeatherFragment : Fragment() {
             when (requestCode) {
                 Constants.RESULT_CODE_CUSTOM_LOCATION -> {
                     WeatherReceiver.setUpdates(requireContext())
-                    checkLocationPermission()
-                }
-                RequestCode.WEATHER_PROVIDER_REQUEST_CODE.code -> {
                     checkLocationPermission()
                 }
             }

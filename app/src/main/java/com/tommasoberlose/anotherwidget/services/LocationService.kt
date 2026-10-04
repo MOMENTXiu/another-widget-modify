@@ -2,27 +2,30 @@ package com.tommasoberlose.anotherwidget.services
 
 import android.Manifest
 import android.app.*
-import android.app.job.JobScheduler
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.location.Address
-import android.location.Geocoder
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.os.Bundle
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import androidx.core.app.*
 import androidx.core.content.ContextCompat
-import com.google.android.gms.location.LocationServices
+import com.chibatching.kotpref.Kotpref
 import com.tommasoberlose.anotherwidget.R
+import com.tommasoberlose.anotherwidget.global.Constants
 import com.tommasoberlose.anotherwidget.global.Preferences
+import com.tommasoberlose.anotherwidget.helpers.LocationHelper
 import com.tommasoberlose.anotherwidget.network.WeatherNetworkApi
 import com.tommasoberlose.anotherwidget.ui.activities.MainActivity
 import com.tommasoberlose.anotherwidget.ui.fragments.MainFragment
+import com.tommasoberlose.anotherwidget.utils.checkGrantedPermission
+import com.tommasoberlose.anotherwidget.utils.ignoreExceptions
 import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
-import java.lang.Exception
-import java.util.*
-import kotlin.collections.ArrayList
+import kotlin.coroutines.resume
 
 class LocationService : Service() {
 
@@ -37,42 +40,106 @@ class LocationService : Service() {
         startForeground(LOCATION_ACCESS_NOTIFICATION_ID, getLocationAccessNotification())
         job?.cancel()
         job = GlobalScope.launch(Dispatchers.IO) {
-            if (ActivityCompat.checkSelfPermission(
-                    this@LocationService,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                LocationServices.getFusedLocationProviderClient(this@LocationService).lastLocation.addOnCompleteListener { task ->
-                    val networkApi = WeatherNetworkApi(this@LocationService)
-                    if (task.isSuccessful) {
-                        val location = task.result
-                        if (location != null) {
-                            Preferences.customLocationLat = location.latitude.toString()
-                            Preferences.customLocationLon = location.longitude.toString()
-                        }
-
-                        CoroutineScope(Dispatchers.IO).launch {
-                            networkApi.updateWeather()
-                            withContext(Dispatchers.Main) {
-                                stopSelf()
-                            }
-                        }
-                        EventBus.getDefault().post(MainFragment.UpdateUiMessageEvent())
-                    } else {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            networkApi.updateWeather()
-                            withContext(Dispatchers.Main) {
-                                stopSelf()
-                            }
-                        }
-                        EventBus.getDefault().post(MainFragment.UpdateUiMessageEvent())
-                    }
-                }
-            } else {
+            updateWeather()
+            withContext(Dispatchers.Main) {
                 stopSelf()
             }
+            EventBus.getDefault().post(MainFragment.UpdateUiMessageEvent())
         }
         return START_STICKY
+    }
+
+    /**
+     * Cache first: a recent coordinate is reused as is, so the location providers stay off for most
+     * refreshes. Only a stale or missing coordinate triggers a fix, and a failed fix still leaves the
+     * weather refresh running on the previously stored coordinate.
+     */
+    private suspend fun updateWeather() {
+        Kotpref.init(this)
+
+        if (!LocationHelper.isCachedLocationFresh()) {
+            acquireLocation()
+        }
+
+        if (LocationHelper.hasCachedLocation()) {
+            WeatherNetworkApi(this@LocationService).updateWeather()
+        } else {
+            Preferences.weatherProviderLocationError = getString(R.string.weather_provider_error_missing_location)
+        }
+    }
+
+    private suspend fun acquireLocation() {
+        if (!checkGrantedPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
+            Log.d(Constants.LOG_TAG, "location refresh skipped: permission denied")
+            return
+        }
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return
+
+        // Providers are not all available on every device, so they are checked at runtime.
+        val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
+            .filter { isProviderEnabled(locationManager, it) }
+        if (providers.isEmpty()) {
+            Log.d(Constants.LOG_TAG, "location refresh skipped: no provider enabled")
+            return
+        }
+
+        Log.d(Constants.LOG_TAG, "location refresh attempted on ${providers.joinToString()}")
+        val fix = withTimeoutOrNull(Constants.LOCATION_ACQUISITION_TIMEOUT) { awaitSingleUpdate(locationManager, providers) }
+        if (fix != null) {
+            Log.d(Constants.LOG_TAG, "location refresh succeeded")
+            LocationHelper.saveLocation(fix.latitude, fix.longitude, fix.time)
+            return
+        }
+        Log.d(Constants.LOG_TAG, "location refresh failed, falling back to the stored coordinates")
+
+        // Timed out: reuse the best last known position, but only if it is newer than the cache.
+        val lastKnown = providers
+            .mapNotNull { lastKnownLocation(locationManager, it) }
+            .maxByOrNull { it.time }
+        if (lastKnown != null && lastKnown.time > Preferences.lastLocationTimestamp) {
+            LocationHelper.saveLocation(lastKnown.latitude, lastKnown.longitude, lastKnown.time)
+        }
+    }
+
+    private suspend fun awaitSingleUpdate(locationManager: LocationManager, providers: List<String>): Location? =
+        suspendCancellableCoroutine { continuation ->
+            val listener = object : LocationListener {
+                override fun onLocationChanged(location: Location) {
+                    if (continuation.isActive) {
+                        ignoreExceptions { locationManager.removeUpdates(this) }
+                        continuation.resume(location)
+                    }
+                }
+
+                override fun onProviderEnabled(provider: String) {}
+
+                override fun onProviderDisabled(provider: String) {}
+
+                @Suppress("DEPRECATION")
+                override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
+            }
+
+            continuation.invokeOnCancellation {
+                ignoreExceptions { locationManager.removeUpdates(listener) }
+            }
+
+            providers.forEach { provider ->
+                ignoreExceptions {
+                    locationManager.requestLocationUpdates(provider, 0L, 0f, listener, Looper.getMainLooper())
+                }
+            }
+        }
+
+    private fun isProviderEnabled(locationManager: LocationManager, provider: String): Boolean = try {
+        locationManager.isProviderEnabled(provider)
+    } catch (ex: Exception) {
+        false
+    }
+
+    private fun lastKnownLocation(locationManager: LocationManager, provider: String): Location? = try {
+        locationManager.getLastKnownLocation(provider)
+    } catch (ex: Exception) {
+        null
     }
 
     override fun onDestroy() {

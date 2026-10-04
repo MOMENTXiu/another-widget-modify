@@ -90,7 +90,6 @@ class MainViewModel(context: Application) : AndroidViewModel(context) {
     val customLocationAdd = Preferences.asLiveData(Preferences::customLocationAdd)
 
     val weatherIconPack = Preferences.asLiveData(Preferences::weatherIconPack)
-    val weatherProvider = Preferences.asLiveData(Preferences::weatherProvider)
     val weatherProviderError = Preferences.asLiveData(Preferences::weatherProviderError)
     val weatherProviderLocationError = Preferences.asLiveData(Preferences::weatherProviderLocationError)
 

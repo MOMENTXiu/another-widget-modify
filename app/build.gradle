@@ -19,11 +19,13 @@ android {
     buildToolsVersion "29.0.3"
 
     defaultConfig {
-        applicationId "com.tommasoberlose.anotherwidget"
+        // Deliberately different from the source package (com.tommasoberlose.anotherwidget) so this
+        // fork installs side by side with the Play Store build instead of replacing it.
+        applicationId "cc.hikamous.anotherwidget"
         minSdkVersion 23
         targetSdkVersion 30
         versionCode 139
-        versionName "2.3.3"
+        versionName "2.3.4-hubert.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GOOGLE_API_KEY", apikeyProperties['GOOGLE_API_KEY'])
@@ -107,7 +109,8 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:19.0.0'
 
     //Weather
-    implementation 'com.github.KwabenBerko:OpenWeatherMap-Android-Library:2.0.2'
+    // play-services-location is kept for ActivityRecognition (the Google Fit step counter).
+    // The weather location path uses android.location.LocationManager instead.
     implementation 'com.google.android.gms:play-services-location:18.0.0'
 
     // Billing

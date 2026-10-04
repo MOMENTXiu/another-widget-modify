@@ -129,53 +129,20 @@
     <string name="show_weather_not_visible">天气信息已隐藏</string>
     <string name="settings_weather_app_title">天气</string>
     <string name="settings_weather_provider_api_key_title">天气 API 密钥</string>
-    <string name="settings_weather_provider_api_key_subtitle_all_set">已正确配置天气信息来源。</string>
-    <string name="settings_weather_provider_api_key_subtitle_not_set">必须配置天气信息来源。</string>
-    <string name="api_key_hint">OpenWeatherMap API 密钥</string>
     <string name="default_weather_app">Google Weather</string>
-    <string name="weather_warning">Google Awareness API 已被弃用。要在微件上显示天气，您需要从第三方来源获取 API 密钥。</string>
     <string name="settings_weather_icon_pack_title">天气图标</string>
     <string name="settings_weather_icon_pack_default">图标包 %d</string>
     <string name="background_location_warning">选择地理定位后，即便应用未启动或在后台，我们也会收集您的定位数据来更新天气信息。\n这些数据不会用在其他地方。</string>
-    <string name="settings_weather_provider_api">天气信息来源</string>
 
-    <string name="settings_weather_provider_open_weather" translatable="false">OpenWeatherMap.org</string>
-    <string name="settings_weather_provider_weatherbit" translatable="false">Weatherbit.io</string>
-    <string name="settings_weather_provider_weather_api" translatable="false">WeatherAPI.com</string>
-    <string name="settings_weather_provider_here" translatable="false">HERE.com</string>
-    <string name="settings_weather_provider_accuweather" translatable="false">AccuWeather.com</string>
-    <string name="settings_weather_provider_weather_gov" translatable="false">Weather.gov (USA)\nby National Weather Services</string>
-    <string name="settings_weather_provider_yr" translatable="false">YR.no/Met.no\nby Meteorologisk Institutt</string>
 
-    <string name="weather_provider_info_open_weather_title">需要 API 密钥\n来保证天气信息来源正常工作。</string>
-    <string name="weather_provider_info_weatherbit_title">该天气信息来源需要 API 密钥\n才能正常工作。</string>
-    <string name="weather_provider_info_weatherapi_title">该天气信息来源需要 API 密钥\n才能正常工作。</string>
-    <string name="weather_provider_info_here_title">该天气信息来源需要 API 密钥\n才能正常工作。</string>
-    <string name="weather_provider_info_accuweather_title">该天气信息来源需要 API 密钥\n才能正常工作。</string>
-    <string name="weather_provider_info_weather_gov_title">该天气信息来源\n仅在美国境内有效。</string>
-    <string name="weather_provider_info_yr_title">该天气来源仅支持\n摄氏度单位。</string>
 
-    <string name="weather_provider_info_open_weather_subtitle">前往天气来源网站、创建个人账户并将默认密钥复制粘贴到此处。</string>
-    <string name="weather_provider_info_weatherbit_subtitle">前往天气来源网站、创建个人账户并将默认密钥复制粘贴到此处。</string>
-    <string name="weather_provider_info_weatherapi_subtitle">前往天气来源网站、创建个人账户并将默认密钥复制粘贴到此处。</string>
-    <string name="weather_provider_info_here_subtitle">前往天气来源网站、创建个人账户并将默认密钥复制粘贴到此处。</string>
-    <string name="weather_provider_info_accuweather_subtitle">前往天气来源网站、创建个人账户并将默认密钥复制粘贴到此处。</string>
-    <string name="weather_provider_info_weather_gov_subtitle">\n</string>
-    <string name="weather_provider_info_yr_subtitle">\n</string>
 
-    <string name="weather_provider_error_missing_key">您选择的天气信息来源需要 API 密钥。</string>
+    <string name="weather_provider_error_missing_key">QWeather 需要 API 密钥。</string>
     <string name="weather_provider_error_wrong_location">不支持当前位置。</string>
     <string name="weather_provider_error_missing_location">请选择一个有效的地址。</string>
-    <string name="weather_provider_error_expired_key">您的 API 密钥似乎已经过期了。</string>
-    <string name="weather_provider_error_invalid_key">API 密钥无效或尚未激活。</string>
-    <string name="weather_provider_error_misconfigured">天气信息来源配置错误。</string>
+    <string name="weather_provider_error_invalid_key">QWeather API 密钥无效或尚未激活。</string>
     <string name="weather_provider_error_connection">网络连接错误。</string>
-    <string name="weather_provider_error_generic">出错了，请检查天气信息来源设置。</string>
-    <string name="api_key_required_message">需要账户</string>
-    <string name="us_only_message">仅限美国</string>
-    <string name="celsius_only_message">仅米制单位</string>
-    <string name="weather_select_a_provider">选择信息来源</string>
-    <string name="weather_provider_activity_subtitle">从列表中选择天气信息来源。\n部分来源需要注册免费个人账户，\n但它们通常也更精准。</string>
+    <string name="weather_provider_error_generic">更新天气时出错了。</string>
 
     <string name="location_access_notification_channel_id" translatable="false">location-access</string>
     <string name="location_access_notification_channel_name">天气更新服务</string>
@@ -358,4 +325,43 @@
     <string name="layout_settings_subtitle">微件间距及其它微调</string>
     <string name="smart_content_header">智能内容</string>
     <string name="spacing_settings_header">间距</string>
+    <!-- QWeather: weather service configuration and errors -->
+    <string name="settings_weather_provider_api_host_title">API Host</string>
+    <string name="settings_qweather_not_configured">需要填写 API 密钥</string>
+    <string name="qweather_settings_info_title">天气数据来自 QWeather。\n需要你自己的 API 密钥。</string>
+    <string name="qweather_settings_info_subtitle">在 QWeather 控制台创建项目，然后把 API Host 和 API 密钥复制到这里。</string>
+    <string name="settings_qweather_android_restriction_title">Android 应用限制</string>
+    <string name="settings_qweather_android_restriction_subtitle">会发送当前构建的包名和签名证书。仅当你在 QWeather 控制台为该密钥启用了应用限制时才需要开启。</string>
+    <string name="action_test">测试</string>
+    <string name="action_testing">测试中\u2026</string>
+    <string name="qweather_check_ok">QWeather 可用：%1$s，%2$s，共 %3$d 小时预报。</string>
+    <string name="weather_provider_error_quota_exceeded">QWeather 配额已用完。</string>
+    <string name="weather_provider_error_rate_limit">请求过于频繁，请稍后再试。</string>
+    <string name="weather_provider_error_forbidden">请求被拒绝：请检查 API Host 和密钥权限。</string>
+    <string name="weather_provider_error_invalid_host">该账号不能使用这个 API Host，请从 QWeather 控制台复制正确的 API Host。</string>
+    <string name="weather_provider_error_security_restriction">QWeather 拒绝了此应用。请在此开启「Android 应用限制」，并在 QWeather 控制台登记当前构建的包名和 SHA-1。</string>
+    <string name="weather_provider_error_host_not_found">无法解析 API Host，请检查 QWeather 控制台里的主机名。</string>
+    <string name="weather_provider_error_timeout">请求超时。</string>
+    <string name="weather_provider_error_empty_response">服务器直接拒绝了请求。这个 API Host 很可能不是该账号对应的那一个，请从 QWeather 控制台复制。</string>
+    <string name="settings_title_backup_restore">备份与恢复</string>
+    <string name="settings_backup_restore_subtitle">导出或导入你的配置</string>
+    <string name="backup_activity_subtitle">备份是纯 JSON 文件，存到你选择的位置。天气缓存、定位缓存和 API 密钥都不会包含在内。</string>
+    <string name="backup_export">导出备份</string>
+    <string name="backup_export_subtitle">把当前配置保存成文件</string>
+    <string name="backup_restore">恢复备份</string>
+    <string name="backup_restore_subtitle">从文件载入配置</string>
+    <string name="backup_export_success">备份已保存。</string>
+    <string name="backup_export_failed">无法写入备份文件。</string>
+    <string name="backup_restore_confirm_title">恢复备份？</string>
+    <string name="backup_restore_confirm_message">创建时间：%1$s\n备份版本：%2$d\n应用版本：%3$s\n\n你当前的 Another Widget 设置将被替换。</string>
+    <string name="backup_restore_success">配置已恢复，组件已刷新。</string>
+    <string name="backup_restore_failed">恢复失败，你的设置没有改变。</string>
+    <string name="backup_unknown_value">未知</string>
+    <string name="backup_error_not_json">这个文件不是可读的 JSON。</string>
+    <string name="backup_error_not_a_backup">这个文件不是 Another Widget 的备份。</string>
+    <string name="backup_error_unsupported_version">这个备份由更新版本的应用创建。</string>
+    <string name="backup_error_empty">这个备份里没有任何设置。</string>
+    <string name="backup_error_unreadable">无法读取这个文件。</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_restore">恢复</string>
 </resources>

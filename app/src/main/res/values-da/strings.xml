@@ -134,53 +134,20 @@
     <string name="show_weather_not_visible">Vejrinfo er skjult</string>
     <string name="settings_weather_app_title">Vejr</string>
     <string name="settings_weather_provider_api_key_title">Vejr API nøgle</string>
-    <string name="settings_weather_provider_api_key_subtitle_all_set">Vejrudbyderen er konfigureret korrekt</string>
-    <string name="settings_weather_provider_api_key_subtitle_not_set">Vejrudbyderen skal konfigureres</string>
-    <string name="api_key_hint">OpenWeatherMap API nøgle</string>
     <string name="default_weather_app">Google Weather</string>
-    <string name="weather_warning">Google Awareness API er forældet. Der kræves nu en API nøgle fra en tredjepartsudbyder, for at vise vejret i widget\'en.</string>
     <string name="settings_weather_icon_pack_title">Ikonpakke</string>
     <string name="settings_weather_icon_pack_default">Ikonpakke %d</string>
     <string name="background_location_warning">Når geolokation er aktiveret, indsamler vi placeringsdata for at opdatere vejrinformationer, selv når app\'en er lukket eller ikke er i brug.\nVi bruger ikke disse data på andre måder.</string>
-    <string name="settings_weather_provider_api">Vejrudbyder</string>
 
-    <string name="settings_weather_provider_open_weather" translatable="false">OpenWeatherMap.org</string>
-    <string name="settings_weather_provider_weatherbit" translatable="false">Weatherbit.io</string>
-    <string name="settings_weather_provider_weather_api" translatable="false">WeatherAPI.com</string>
-    <string name="settings_weather_provider_here" translatable="false">HERE.com</string>
-    <string name="settings_weather_provider_accuweather" translatable="false">AccuWeather.com</string>
-    <string name="settings_weather_provider_weather_gov" translatable="false">Weather.gov (USA)\nby National Weather Services</string>
-    <string name="settings_weather_provider_yr" translatable="false">YR.no/Met.no\nby Meteorologisk Institutt</string>
 
-    <string name="weather_provider_info_open_weather_title">Denne vejrudbyder har brug for\nen API-nøgle for at fungere korrekt.</string>
-    <string name="weather_provider_info_weatherbit_title">Denne vejrudbyder har brug for\nen API-nøgle for at fungere korrekt.</string>
-    <string name="weather_provider_info_weatherapi_title">Denne vejrudbyder har brug for\nen API-nøgle for at fungere korrekt.</string>
-    <string name="weather_provider_info_here_title">Denne vejrudbyder har brug for\nen API-nøgle for at fungere korrekt.</string>
-    <string name="weather_provider_info_accuweather_title">Denne vejrudbyder har brug for\nen API-nøgle for at fungere korrekt.</string>
-    <string name="weather_provider_info_weather_gov_title">Denne vejrudbyder fungerer kun\nfor placeringer i USA.</string>
-    <string name="weather_provider_info_yr_title">Denne vejrudbyder tillader kun Celsius temperaturer.</string>
 
-    <string name="weather_provider_info_open_weather_subtitle">Åbn udbyderens websted, opret en personlig konto og indsæt standardnøglen her.</string>
-    <string name="weather_provider_info_weatherbit_subtitle">Åbn udbyderens websted, opret en personlig konto og indsæt standardnøglen her.</string>
-    <string name="weather_provider_info_weatherapi_subtitle">Åbn udbyderens websted, opret en personlig konto og indsæt standardnøglen her.</string>
-    <string name="weather_provider_info_here_subtitle">Åbn udbyderens websted, opret en personlig konto og indsæt standardnøglen her.</string>
-    <string name="weather_provider_info_accuweather_subtitle">Åbn udbyderens websted, opret en personlig konto og indsæt standardnøglen her.</string>
-    <string name="weather_provider_info_weather_gov_subtitle">\n</string>
-    <string name="weather_provider_info_yr_subtitle">\n</string>
 
-    <string name="weather_provider_error_missing_key">Vejrudbyderen du har valgt kræver en API-nøgle.</string>
+    <string name="weather_provider_error_missing_key">QWeather kræver en API-nøgle.</string>
     <string name="weather_provider_error_wrong_location">Den aktuelle placering understøttes ikke.</string>
     <string name="weather_provider_error_missing_location">Vælg en gyldig placering.</string>
-    <string name="weather_provider_error_expired_key">Det ser ud til, at din API-nøgle er udløbet.</string>
-    <string name="weather_provider_error_invalid_key">API-nøgle er ugyldig eller ikke aktiveret endnu.</string>
-    <string name="weather_provider_error_misconfigured">Vejrudbyderen er konfigureret forkert.</string>
+    <string name="weather_provider_error_invalid_key">QWeather API-nøglen er ugyldig eller ikke aktiveret endnu.</string>
     <string name="weather_provider_error_connection">Forbindelsesfejl.</string>
-    <string name="weather_provider_error_generic">Noget gik galt, tjek vejrudbyderens konfiguration.</string>
-    <string name="api_key_required_message">Konto påkrævet</string>
-    <string name="us_only_message">Kun USA</string>
-    <string name="celsius_only_message">Kun metriske enheder</string>
-    <string name="weather_select_a_provider">Vælg en udbyder</string>
-    <string name="weather_provider_activity_subtitle">Vælg en vejrudbyder fra listen.\nEnkelte udbydere har brug for en gratis personlig konto,\nmen de er normalt mere nøjagtige.</string>
+    <string name="weather_provider_error_generic">Noget gik galt under opdateringen af vejret.</string>
 
     <string name="location_access_notification_channel_id" translatable="false">location-access</string>
     <string name="location_access_notification_channel_name">Opdateringstjeneste til vejret</string>
@@ -328,7 +295,7 @@
     <string name="settings_title">Indstillinger</string>
     <string name="style_header">Stil</string>
     <string name="actions_header">Handlinger</string>
-    <string name="provider_header">Opsætning</string>
+    <string name="provider_header">Vejrkilde</string>
     <string name="appearance_header">Udseende</string>
     <string name="preferences_header">Præferencer</string>
     <string name="settings_privacy_policy_title"><![CDATA[Juridisk og privatliv]]></string>
@@ -374,4 +341,43 @@
     <string name="color_copied">Farve kopieret til udklipsholder.</string>
     <string name="error_copy_color">Farven kan ikke kopieres.</string>
     <string name="default_apps_settings_header">Standard apps</string>
+    <!-- QWeather: weather service configuration and errors -->
+    <string name="settings_weather_provider_api_host_title">API-host</string>
+    <string name="settings_qweather_not_configured">API-nøgle påkrævet</string>
+    <string name="qweather_settings_info_title">Vejrdata fra QWeather.\nDer kræves en personlig API-nøgle.</string>
+    <string name="qweather_settings_info_subtitle">Opret et projekt i QWeather-konsollen, og kopier API-host og API-nøgle hertil.</string>
+    <string name="settings_qweather_android_restriction_title">Android-appbegrænsning</string>
+    <string name="settings_qweather_android_restriction_subtitle">Sender pakkenavn og signeringscertifikat for dette build. Slå kun til, hvis nøglen er begrænset til denne app i QWeather-konsollen.</string>
+    <string name="action_test">Test</string>
+    <string name="action_testing">Tester\u2026</string>
+    <string name="qweather_check_ok">QWeather svarer: %1$s, %2$s, %3$d timers prognose.</string>
+    <string name="weather_provider_error_quota_exceeded">QWeather-kvoten er opbrugt.</string>
+    <string name="weather_provider_error_rate_limit">For mange forespørgsler, prøv igen senere.</string>
+    <string name="weather_provider_error_forbidden">Forespørgslen blev afvist: tjek API-host og nøglens rettigheder.</string>
+    <string name="weather_provider_error_invalid_host">Denne API-host er ugyldig for kontoen, kopier API-hosten fra QWeather-konsollen.</string>
+    <string name="weather_provider_error_security_restriction">QWeather afviste denne app. Slå Android-appbegrænsning til her, og registrer pakkenavn og SHA-1 for dette build i QWeather-konsollen.</string>
+    <string name="weather_provider_error_host_not_found">API-hosten kunne ikke slås op. Tjek værtsnavnet i QWeather-konsollen.</string>
+    <string name="weather_provider_error_timeout">Anmodningen fik timeout.</string>
+    <string name="weather_provider_error_empty_response">Serveren afviste anmodningen. API-hosten er sandsynligvis ikke den, der hører til kontoen: kopier den fra QWeather-konsollen.</string>
+    <string name="settings_title_backup_restore">Backup og gendan</string>
+    <string name="settings_backup_restore_subtitle">Eksportér eller importér din konfiguration</string>
+    <string name="backup_activity_subtitle">Backups er almindelige JSON-filer, gemt hvor du vil. Vejrcache, placeringscache og API-nøglen er aldrig med.</string>
+    <string name="backup_export">Eksportér backup</string>
+    <string name="backup_export_subtitle">Gem din konfiguration i en fil</string>
+    <string name="backup_restore">Gendan backup</string>
+    <string name="backup_restore_subtitle">Indlæs en konfiguration fra en fil</string>
+    <string name="backup_export_success">Backup gemt.</string>
+    <string name="backup_export_failed">Kunne ikke skrive backupfilen.</string>
+    <string name="backup_restore_confirm_title">Gendan backup?</string>
+    <string name="backup_restore_confirm_message">Oprettet: %1$s\nBackupversion: %2$d\nAppversion: %3$s\n\nDine nuværende Another Widget-indstillinger erstattes.</string>
+    <string name="backup_restore_success">Konfigurationen er gendannet, og widgetten er opdateret.</string>
+    <string name="backup_restore_failed">Gendannelsen mislykkedes. Dine indstillinger er uændrede.</string>
+    <string name="backup_unknown_value">ukendt</string>
+    <string name="backup_error_not_json">Filen er ikke læsbar JSON.</string>
+    <string name="backup_error_not_a_backup">Filen er ikke en Another Widget-backup.</string>
+    <string name="backup_error_unsupported_version">Backuppen er lavet af en nyere version af appen.</string>
+    <string name="backup_error_empty">Backuppen indeholder ingen indstillinger.</string>
+    <string name="backup_error_unreadable">Filen kunne ikke læses.</string>
+    <string name="action_cancel">Annuller</string>
+    <string name="action_restore">Gendan</string>
 </resources>

@@ -134,53 +134,38 @@
     <string name="show_weather_not_visible">Weather info is hidden</string>
     <string name="settings_weather_app_title">Weather</string>
     <string name="settings_weather_provider_api_key_title">Weather API key</string>
-    <string name="settings_weather_provider_api_key_subtitle_all_set">The weather provider is configured correctly.</string>
-    <string name="settings_weather_provider_api_key_subtitle_not_set">The weather provider must be configured.</string>
-    <string name="api_key_hint">OpenWeatherMap API Key</string>
+    <string name="settings_qweather_title" translatable="false">QWeather</string>
+    <string name="settings_qweather_not_configured">API key required</string>
+    <string name="qweather_settings_info_title">Weather data by QWeather.\nA personal API key is required.</string>
+    <string name="qweather_settings_info_subtitle">Open the QWeather console, create a project and copy the API host and the API key here.</string>
+    <string name="action_test">Test</string>
+    <string name="action_testing">Testing\u2026</string>
+    <string name="qweather_check_ok">QWeather is reachable: %1$s, %2$s, %3$d hours of forecast.</string>
+    <string name="settings_qweather_android_restriction_title">Android app restriction</string>
+    <string name="settings_qweather_android_restriction_subtitle">Sends this build\'s package name and signing certificate. Turn it on only if the API key is restricted to this app in the QWeather console.</string>
+    <string name="settings_weather_provider_api_host_title">API host</string>
     <string name="default_weather_app">Google Weather</string>
-    <string name="weather_warning">Google Awareness API is now deprecated. It is now required to have an API key from a third-party provider to show weather in the widget.</string>
     <string name="settings_weather_icon_pack_title">Icon pack</string>
     <string name="settings_weather_icon_pack_default">Icon pack %d</string>
     <string name="background_location_warning">When Geolocation is selected, we collect location data to update the weather information even when the app is closed or not in use.\nWe will not use these data otherwise.</string>
-    <string name="settings_weather_provider_api">Weather provider</string>
 
-    <string name="settings_weather_provider_open_weather" translatable="false">OpenWeatherMap.org</string>
-    <string name="settings_weather_provider_weatherbit" translatable="false">Weatherbit.io</string>
-    <string name="settings_weather_provider_weather_api" translatable="false">WeatherAPI.com</string>
-    <string name="settings_weather_provider_here" translatable="false">HERE.com</string>
-    <string name="settings_weather_provider_accuweather" translatable="false">AccuWeather.com</string>
-    <string name="settings_weather_provider_weather_gov" translatable="false">Weather.gov (USA)\nby National Weather Services</string>
-    <string name="settings_weather_provider_yr" translatable="false">YR.no/Met.no\nby Meteorologisk Institutt</string>
 
-    <string name="weather_provider_info_open_weather_title">This weather provider needs\nan API key to work correctly.</string>
-    <string name="weather_provider_info_weatherbit_title">This weather provider needs\nan API key to work correctly.</string>
-    <string name="weather_provider_info_weatherapi_title">This weather provider needs\nan API key to work correctly.</string>
-    <string name="weather_provider_info_here_title">This weather provider needs\nan API key to work correctly.</string>
-    <string name="weather_provider_info_accuweather_title">This weather provider needs\nan API key to work correctly.</string>
-    <string name="weather_provider_info_weather_gov_title">This weather provider only works\nfor locations inside the USA.</string>
-    <string name="weather_provider_info_yr_title">This weather provider only allows\nCelsius temperature unit.</string>
 
-    <string name="weather_provider_info_open_weather_subtitle">Open the provider website, create a personal account and copy the default key here.</string>
-    <string name="weather_provider_info_weatherbit_subtitle">Open the provider website, create a personal account and copy the default key here.</string>
-    <string name="weather_provider_info_weatherapi_subtitle">Open the provider website, create a personal account and copy the default key here.</string>
-    <string name="weather_provider_info_here_subtitle">Open the provider website, create a personal account and copy the default key here.</string>
-    <string name="weather_provider_info_accuweather_subtitle">Open the provider website, create a personal account and copy the default key here.</string>
-    <string name="weather_provider_info_weather_gov_subtitle">\n</string>
-    <string name="weather_provider_info_yr_subtitle">\n</string>
 
-    <string name="weather_provider_error_missing_key">The weather provider that you\'ve selected requires an API key.</string>
+    <string name="weather_provider_error_missing_key">QWeather requires an API key.</string>
     <string name="weather_provider_error_wrong_location">The current location is not supported.</string>
     <string name="weather_provider_error_missing_location">Please select a valid location.</string>
-    <string name="weather_provider_error_expired_key">It seems that your API key has expired.</string>
-    <string name="weather_provider_error_invalid_key">API key not valid, or not yet activated.</string>
-    <string name="weather_provider_error_misconfigured">The weather provider is wrongly configured.</string>
+    <string name="weather_provider_error_invalid_key">The QWeather API key is not valid, or not yet activated.</string>
+    <string name="weather_provider_error_host_not_found">The API host could not be resolved. Check the host name in the QWeather console.</string>
+    <string name="weather_provider_error_timeout">The request timed out.</string>
+    <string name="weather_provider_error_empty_response">The server turned the request away. The API host is probably not the one assigned to this account: copy it from the QWeather console.</string>
     <string name="weather_provider_error_connection">Connection error.</string>
-    <string name="weather_provider_error_generic">Something went wrong, check the weather provider config.</string>
-    <string name="api_key_required_message">Account required</string>
-    <string name="us_only_message">USA Only</string>
-    <string name="celsius_only_message">Metric Unit Only</string>
-    <string name="weather_select_a_provider">Select a provider</string>
-    <string name="weather_provider_activity_subtitle">Select a weather provider from the list.\nA few providers need a free personal account,\nbut they are usually more accurate.</string>
+    <string name="weather_provider_error_generic">Something went wrong while updating the weather.</string>
+    <string name="weather_provider_error_quota_exceeded">The QWeather quota has been exceeded.</string>
+    <string name="weather_provider_error_security_restriction">QWeather rejected this app. Enable the Android app restriction here, and register this build\'s package name and SHA-1 in the QWeather console.</string>
+    <string name="weather_provider_error_rate_limit">Too many requests, please try again later.</string>
+    <string name="weather_provider_error_forbidden">The request was rejected: check the API host and the key permissions.</string>
+    <string name="weather_provider_error_invalid_host">The API host is not valid for this account, copy the API host from the QWeather console.</string>
 
     <string name="location_access_notification_channel_id" translatable="false">location-access</string>
     <string name="location_access_notification_channel_name">Weather update service</string>
@@ -328,7 +313,7 @@
     <string name="settings_title">Settings</string>
     <string name="style_header">Style</string>
     <string name="actions_header">Actions</string>
-    <string name="provider_header">Provider</string>
+    <string name="provider_header">Weather service</string>
     <string name="appearance_header">Appearance</string>
     <string name="preferences_header">Preferences</string>
     <string name="settings_privacy_policy_title"><![CDATA[Legal & Privacy]]></string>
@@ -347,6 +332,27 @@
     <string name="donation_lunch">A quick lunch</string>
     <string name="action_show_widget_preview">Show widget preview</string>
     <string name="support_dev_subtitle">This is a single developer project,\nso thank you for the support!</string>
+    <string name="settings_title_backup_restore">Backup &amp; Restore</string>
+    <string name="settings_backup_restore_subtitle">Export or import your configuration</string>
+    <string name="backup_activity_subtitle">Backups are plain JSON files, saved wherever you choose. Weather caches, the location cache and the API key are never included.</string>
+    <string name="backup_export">Export backup</string>
+    <string name="backup_export_subtitle">Save your configuration to a file</string>
+    <string name="backup_restore">Restore backup</string>
+    <string name="backup_restore_subtitle">Load a configuration from a file</string>
+    <string name="backup_export_success">Backup saved.</string>
+    <string name="backup_export_failed">Could not write the backup file.</string>
+    <string name="backup_restore_confirm_title">Restore backup?</string>
+    <string name="backup_restore_confirm_message">Created: %1$s\nBackup version: %2$d\nApp version: %3$s\n\nYour current Another Widget settings will be replaced.</string>
+    <string name="backup_restore_success">Configuration restored, the widget has been refreshed.</string>
+    <string name="backup_restore_failed">Restore failed. Your settings were not changed.</string>
+    <string name="backup_unknown_value">unknown</string>
+    <string name="backup_error_not_json">That file is not readable JSON.</string>
+    <string name="backup_error_not_a_backup">That file is not an Another Widget backup.</string>
+    <string name="backup_error_unsupported_version">This backup was created by a newer version of the app.</string>
+    <string name="backup_error_empty">That backup contains no settings.</string>
+    <string name="backup_error_unreadable">That file could not be read.</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_restore">Restore</string>
     <string name="settings_title_integrations">Integrations</string>
     <string name="label_count_installed_integrations">%d installed integrations</string>
     <string name="nothing">Nothing</string>

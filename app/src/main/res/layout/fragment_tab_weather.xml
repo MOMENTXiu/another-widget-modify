@@ -45,7 +45,7 @@
                     android:focusable="true"
                     android:background="?android:attr/selectableItemBackground"
                     android:gravity="center_vertical"
-                    android:id="@+id/action_weather_provider"
+                    android:id="@+id/action_qweather_settings"
                     android:orientation="horizontal">
                     <ImageView
                         android:layout_width="48dp"
@@ -64,11 +64,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             style="@style/AnotherWidget.Settings.Title"
-                            android:text="@string/settings_weather_provider_api"/>
+                            android:text="@string/settings_qweather_title"/>
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:id="@+id/label_weather_provider"
+                            android:id="@+id/label_qweather_settings"
                             style="@style/AnotherWidget.Settings.Subtitle"/>
                     </LinearLayout>
                 </LinearLayout>
