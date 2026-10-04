@@ -27,13 +27,17 @@ object IntentHelper {
     const val DO_NOTHING_OPTION = "DO_NOTHING"
     const val REFRESH_WIDGET_OPTION = "REFRESH_WIDGET"
 
-    fun getWidgetUpdateIntent(context: Context): Intent {
+    /** Correlates an update request with the broadcast it produces, for the debug log only. */
+    const val FLOW_ID_EXTRA = "debug_flow_id"
+
+    fun getWidgetUpdateIntent(context: Context, flowId: String? = null): Intent {
         val widgetManager = AppWidgetManager.getInstance(context)
         val widgetComponent = ComponentName(context, MainWidget::class.java)
         val widgetIds = widgetManager.getAppWidgetIds(widgetComponent)
         return Intent(context, MainWidget::class.java).apply {
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, widgetIds)
             action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            flowId?.let { putExtra(FLOW_ID_EXTRA, it) }
         }
     }
 

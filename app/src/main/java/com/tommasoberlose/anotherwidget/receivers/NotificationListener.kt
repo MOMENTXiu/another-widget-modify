@@ -23,7 +23,7 @@ import java.util.*
 class NotificationListener : NotificationListenerService() {
     override fun onListenerConnected() {
         MediaPlayerHelper.updatePlayingMediaInfo(this)
-        MainWidget.updateWidget(this)
+        MainWidget.updateWidget(this, "notification_update")
         super.onListenerConnected()
     }
 
@@ -49,7 +49,7 @@ class NotificationListener : NotificationListenerService() {
                         Preferences.lastNotificationIcon = 0
                     }
                     Preferences.lastNotificationPackage = sbn.packageName
-                    MainWidget.updateWidget(this)
+                    MainWidget.updateWidget(this, "notification_update")
                     setTimeout(this)
                 }
             }
@@ -67,7 +67,7 @@ class NotificationListener : NotificationListenerService() {
             }
         }
 
-        MainWidget.updateWidget(this)
+        MainWidget.updateWidget(this, "notification_update")
         super.onNotificationRemoved(sbn)
     }
 

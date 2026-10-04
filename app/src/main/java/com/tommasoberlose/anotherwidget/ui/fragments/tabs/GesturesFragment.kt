@@ -234,7 +234,7 @@ class GesturesFragment : Fragment() {
                     }
                 }
             }
-            MainWidget.updateWidget(requireContext())
+            MainWidget.updateWidget(requireContext(), "settings_changed")
         }
         super.onActivityResult(requestCode, resultCode, data)
     }

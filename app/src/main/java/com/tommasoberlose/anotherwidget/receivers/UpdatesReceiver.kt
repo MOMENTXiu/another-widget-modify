@@ -22,6 +22,8 @@ import java.util.*
 class UpdatesReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        DebugLogger.d("UpdatesReceiver", "onReceive action=${intent.action}")
+
         when (intent.action) {
             Intent.ACTION_BOOT_COMPLETED,
             Intent.ACTION_MY_PACKAGE_REPLACED,
@@ -39,7 +41,7 @@ class UpdatesReceiver : BroadcastReceiver() {
             AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED,
             Actions.ACTION_ALARM_UPDATE,
             Actions.ACTION_TIME_UPDATE -> {
-                MainWidget.updateWidget(context)
+                MainWidget.updateWidget(context, "scheduled_refresh")
                 if (intent.hasExtra(EVENT_ID)) {
                     setUpdates(context, intent.getLongExtra(EVENT_ID, -1))
                 }
@@ -47,17 +49,19 @@ class UpdatesReceiver : BroadcastReceiver() {
 
             Actions.ACTION_CLEAR_NOTIFICATION -> {
                 ActiveNotificationsHelper.clearLastNotification(context)
-                MainWidget.updateWidget(context)
+                MainWidget.updateWidget(context, "notification_update")
             }
             Actions.ACTION_UPDATE_GREETINGS -> {
-                MainWidget.updateWidget(context)
+                MainWidget.updateWidget(context, "scheduled_refresh")
             }
 
             Actions.ACTION_REFRESH -> {
+                val flowId = DebugLog.newFlowId()
+                DebugLogger.d("UpdatesReceiver", "manual refresh requested flow=$flowId")
                 GlobalScope.launch(Dispatchers.IO) {
                     CalendarHelper.updateEventList(context)
                     MediaPlayerHelper.updatePlayingMediaInfo(context)
-                    WeatherHelper.updateWeather(context)
+                    WeatherHelper.updateWeather(context, flowId, trigger = "manual_refresh")
                 }
             }
         }

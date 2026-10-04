@@ -174,13 +174,20 @@ class SettingsFragment : Fragment() {
         }
 
         binding.debugModeToggle.setOnCheckedChangeListener { _, isChecked ->
+            val old = Preferences.debugMode
             Preferences.debugMode = if (isChecked) 1 else 0
+            DebugLogger.d("DebugSettings", "debugMode changed old=$old new=${Preferences.debugMode}")
         }
 
-        binding.actionDebugExport.setOnClickListener { exportDebugLog() }
+        binding.actionDebugExport.setOnClickListener {
+            DebugLogger.d("DebugSettings", "export debug log clicked")
+            exportDebugLog()
+        }
 
         binding.actionDebugClear.setOnClickListener {
-            DebugLogger.clear(requireContext())
+            DebugLogger.d("DebugSettings", "clear debug log clicked")
+            val removed = DebugLogger.clear(requireContext())
+            DebugLogger.d("DebugSettings", "clear debug log removedFiles=$removed")
             Toast.makeText(requireContext(), getString(R.string.debug_clear_success), Toast.LENGTH_SHORT).show()
         }
 
@@ -228,13 +235,14 @@ class SettingsFragment : Fragment() {
         }
 
         binding.actionRefreshWidget.setOnClickListener {
+            DebugLogger.d("Settings", "refresh widget clicked")
             binding.actionRefreshIcon
                 .animate()
                 .rotation((binding.actionRefreshIcon.rotation - binding.actionRefreshIcon.rotation % 360f) + 360f)
                 .withEndAction {
                     viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                         try {
-                            WeatherHelper.updateWeather(requireContext())
+                            WeatherHelper.updateWeather(requireContext(), trigger = "manual_refresh")
                             CalendarHelper.updateEventList(requireContext())
                             MediaPlayerHelper.updatePlayingMediaInfo(requireContext())
                             ActiveNotificationsHelper.clearLastNotification(requireContext())
@@ -276,6 +284,7 @@ class SettingsFragment : Fragment() {
                 getString(if (written) R.string.debug_export_success else R.string.debug_export_failed),
                 Toast.LENGTH_SHORT
             ).show()
+            DebugLogger.d("DebugSettings", "export debug log written=$written uri=$uri")
         }
     }
 

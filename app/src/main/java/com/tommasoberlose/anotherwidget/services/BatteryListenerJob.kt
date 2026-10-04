@@ -9,11 +9,13 @@ import android.content.Context
 import android.os.Build
 import android.provider.CalendarContract
 import com.tommasoberlose.anotherwidget.helpers.CalendarHelper
+import com.tommasoberlose.anotherwidget.helpers.DebugLogger
 import com.tommasoberlose.anotherwidget.ui.widgets.MainWidget
 
 class BatteryListenerJob : JobService() {
     override fun onStartJob(params: JobParameters): Boolean {
-        MainWidget.updateWidget(this)
+        DebugLogger.d("BatteryListenerJob", "onStartJob")
+        MainWidget.updateWidget(this, "battery_update")
         schedule(
             this
         )

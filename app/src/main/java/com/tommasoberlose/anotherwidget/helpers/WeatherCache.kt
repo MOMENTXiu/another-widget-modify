@@ -39,18 +39,30 @@ object WeatherCache {
 
     fun load(): CachedWeatherForecast? {
         val raw = Preferences.weatherForecastCache
-        if (raw.isBlank()) return null
+        if (raw.isBlank()) {
+            DebugLogger.d("WeatherCache", "read empty")
+            return null
+        }
 
         return try {
-            gson.fromJson(raw, CachedWeatherForecast::class.java)?.takeIf { it.hours.isNotEmpty() }
+            val parsed = gson.fromJson(raw, CachedWeatherForecast::class.java)
+            if (parsed == null || parsed.hours.isEmpty()) {
+                DebugLogger.w("WeatherCache", "read empty entries")
+                null
+            } else {
+                DebugLogger.d("WeatherCache", "read entries=${parsed.hours.size} cachedLat=${parsed.latitude} cachedLon=${parsed.longitude}")
+                parsed
+            }
         } catch (ex: Exception) {
-            Log.w(Constants.LOG_TAG, "cached forecast could not be read: ${ex.javaClass.simpleName}")
+            DebugLogger.w("WeatherCache", "read failed exception=${ex.javaClass.simpleName}", ex)
             null
         }
     }
 
     /** Only called with a forecast that was validated first, so a working cache is never lost. */
     fun save(forecast: CachedWeatherForecast) {
+        DebugLogger.d("WeatherCache",
+            "write entries=${forecast.hours.size} lat=${forecast.latitude} lon=${forecast.longitude}")
         Preferences.weatherForecastCache = gson.toJson(forecast)
     }
 

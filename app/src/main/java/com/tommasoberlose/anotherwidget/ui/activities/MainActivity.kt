@@ -20,6 +20,7 @@ import com.tommasoberlose.anotherwidget.R
 import com.tommasoberlose.anotherwidget.databinding.ActivityMainBinding
 import com.tommasoberlose.anotherwidget.global.Actions
 import com.tommasoberlose.anotherwidget.global.Preferences
+import com.tommasoberlose.anotherwidget.helpers.DebugLogger
 import com.tommasoberlose.anotherwidget.ui.viewmodels.MainViewModel
 import com.tommasoberlose.anotherwidget.ui.widgets.MainWidget
 import com.tommasoberlose.anotherwidget.utils.checkGrantedPermission
@@ -44,6 +45,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        DebugLogger.d("MainActivity", "onCreate")
 
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -132,23 +134,32 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     override fun onResume() {
         super.onResume()
+        DebugLogger.d("MainActivity", "onResume")
 
         if (Preferences.showEvents && !checkGrantedPermission(Manifest.permission.READ_CALENDAR)) {
             Preferences.showEvents = false
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        DebugLogger.d("MainActivity", "onPause")
+    }
+
     override fun onStart() {
-        Preferences.preferences.registerOnSharedPreferenceChangeListener(this)
         super.onStart()
+        DebugLogger.d("MainActivity", "onStart")
+        Preferences.preferences.registerOnSharedPreferenceChangeListener(this)
     }
 
     override fun onStop() {
         super.onStop()
+        DebugLogger.d("MainActivity", "onStop")
         Preferences.preferences.unregisterOnSharedPreferenceChangeListener(this)
     }
 
     override fun onSharedPreferenceChanged(p0: SharedPreferences?, p1: String?) {
-        MainWidget.updateWidget(this)
+        DebugLogger.d("MainActivity", "onSharedPreferenceChanged key=$p1")
+        MainWidget.updateWidget(this, "settings_changed")
     }
 }

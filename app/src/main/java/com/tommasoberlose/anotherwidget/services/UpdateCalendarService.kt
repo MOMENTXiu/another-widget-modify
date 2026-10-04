@@ -51,6 +51,7 @@ class UpdateCalendarService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        com.tommasoberlose.anotherwidget.helpers.DebugLogger.d("UpdateCalendarService", "onStartCommand startId=$startId")
         startForeground(CALENDAR_SYNC_NOTIFICATION_ID, getCalendarSyncNotification())
         job?.cancel()
         job = GlobalScope.launch(Dispatchers.IO) {
@@ -167,7 +168,7 @@ class UpdateCalendarService : Service() {
             }
 
             UpdatesReceiver.setUpdates(this@UpdateCalendarService)
-            MainWidget.updateWidget(this@UpdateCalendarService)
+            MainWidget.updateWidget(this@UpdateCalendarService, "calendar_update")
 
             EventBus.getDefault().post(MainFragment.UpdateUiMessageEvent())
             eventRepository.close()

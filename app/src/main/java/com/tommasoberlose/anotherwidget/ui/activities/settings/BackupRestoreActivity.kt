@@ -26,9 +26,16 @@ class BackupRestoreActivity : AppCompatActivity() {
         binding = ActivityBackupRestoreBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        com.tommasoberlose.anotherwidget.helpers.DebugLogger.d("BackupRestoreActivity", "onCreate")
         binding.actionBack.setOnClickListener { onBackPressed() }
-        binding.actionExport.setOnClickListener { exportBackup() }
-        binding.actionRestore.setOnClickListener { pickBackup() }
+        binding.actionExport.setOnClickListener {
+            com.tommasoberlose.anotherwidget.helpers.DebugLogger.d("BackupRestoreActivity", "export backup clicked")
+            exportBackup()
+        }
+        binding.actionRestore.setOnClickListener {
+            com.tommasoberlose.anotherwidget.helpers.DebugLogger.d("BackupRestoreActivity", "restore backup clicked")
+            pickBackup()
+        }
     }
 
     private fun exportBackup() {

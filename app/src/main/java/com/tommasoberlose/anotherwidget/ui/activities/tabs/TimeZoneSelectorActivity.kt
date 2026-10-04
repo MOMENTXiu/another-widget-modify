@@ -58,7 +58,7 @@ class TimeZoneSelectorActivity : AppCompatActivity() {
                             altTimezoneId = ""
                             altTimezoneLabel = ""
                         }
-                        MainWidget.updateWidget(this@TimeZoneSelectorActivity)
+                        MainWidget.updateWidget(this@TimeZoneSelectorActivity, "settings_changed")
                         setResult(Activity.RESULT_OK)
                         finish()
                     }
@@ -80,7 +80,7 @@ class TimeZoneSelectorActivity : AppCompatActivity() {
                                     item.getAddressLine(0)
                                 }
                             }
-                            MainWidget.updateWidget(this@TimeZoneSelectorActivity)
+                            MainWidget.updateWidget(this@TimeZoneSelectorActivity, "settings_changed")
                             setResult(Activity.RESULT_OK)
                             finish()
                         } else {

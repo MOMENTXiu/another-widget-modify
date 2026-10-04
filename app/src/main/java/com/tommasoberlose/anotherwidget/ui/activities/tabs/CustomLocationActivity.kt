@@ -22,6 +22,7 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import com.tommasoberlose.anotherwidget.databinding.ActivityCustomLocationBinding
 import com.tommasoberlose.anotherwidget.global.Preferences
+import com.tommasoberlose.anotherwidget.helpers.DebugLogger
 import com.tommasoberlose.anotherwidget.ui.viewmodels.tabs.CustomLocationViewModel
 import kotlinx.coroutines.*
 import net.idik.lib.slimadapter.SlimAdapter
@@ -35,6 +36,7 @@ class CustomLocationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        DebugLogger.d("CustomLocationActivity", "onCreate")
         viewModel = ViewModelProvider(this).get(CustomLocationViewModel::class.java)
         binding = ActivityCustomLocationBinding.inflate(layoutInflater)
 
@@ -55,6 +57,7 @@ class CustomLocationActivity : AppCompatActivity() {
             .register<Address>(R.layout.custom_location_item) { item, injector ->
                 injector.text(R.id.text, item.getAddressLine(0) ?: "")
                 injector.clicked(R.id.item) {
+                    DebugLogger.d("LocationSettings", "manual location selected lat=${item.latitude} lon=${item.longitude}")
                     Preferences.bulk {
                         customLocationLat = item.latitude.toString()
                         customLocationLon = item.longitude.toString()
@@ -123,7 +126,8 @@ class CustomLocationActivity : AppCompatActivity() {
                 override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
                     report?.let {
                         if (report.areAllPermissionsGranted()){
-                            Preferences.bulk {
+                            DebugLogger.d("LocationSettings", "gps location selected")
+                    Preferences.bulk {
                                 remove(Preferences::customLocationLat)
                                 remove(Preferences::customLocationLon)
                                 remove(Preferences::customLocationAdd)

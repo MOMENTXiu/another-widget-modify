@@ -5,14 +5,17 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import java.util.UUID
 
 /**
- * Pure helpers behind [DebugLogger]: the line format, secret redaction and log rotation. None of
- * this touches Android, so the behaviour can be verified without a device.
+ * Pure helpers behind [DebugLogger]: the logcat-like line format, secret redaction and log
+ * rotation. None of this touches Android, so the behaviour can be verified without a device.
  */
 object DebugLog {
 
-    const val TAG = "AnotherWidgetDebug"
+    /** Short correlation id tying the widget trigger, location, weather and render logs of one
+     * refresh together. Best effort only: an independent flow id is better than none. */
+    fun newFlowId(): String = UUID.randomUUID().toString().replace("-", "").take(6)
 
     // Header names and query parameters that must never reach a log line with their value.
     // The optional "bearer" prefix is swallowed too, so `Authorization: Bearer <jwt>` loses the jwt.
@@ -21,36 +24,42 @@ object DebugLog {
     )
 
     /**
-     * Local time as ISO 8601 with milliseconds and the UTC offset, e.g.
-     * `2026-10-04T23:30:12.384+08:00`. Built by hand because `SimpleDateFormat` only understands the
-     * `X` offset pattern from API 24 and this app supports API 23.
+     * Local wall clock as `yyyy-MM-dd HH:mm:ss.SSS±hh:mm`, e.g. `2026-10-05 00:30:39.742+08:00`.
+     * Built by hand because `SimpleDateFormat` only understands the `X` offset pattern from API 24
+     * and this app supports API 23.
      */
+    fun stamp(now: Long): String {
+        val wallClock = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(Date(now))
+        return wallClock + offset(now)
+    }
+
+    /** Forecast times keep the strict ISO spelling, e.g. `2026-10-04T12:00:00.000+08:00`. */
     fun timestamp(now: Long): String {
         val wallClock = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US).format(Date(now))
+        return wallClock + offset(now)
+    }
+
+    private fun offset(now: Long): String {
         val offset = TimeZone.getDefault().getOffset(now)
         val sign = if (offset < 0) "-" else "+"
         val minutes = Math.abs(offset) / 60000
 
-        return wallClock + sign + String.format(Locale.US, "%02d:%02d", minutes / 60, minutes % 60)
+        return sign + String.format(Locale.US, "%02d:%02d", minutes / 60, minutes % 60)
     }
 
-    /** `2026-10-04T23:30:12.384+08:00 [LOCATION] request_start provider=network timeoutMs=15000` */
+    /**
+     * One logcat-shaped record:
+     * `2026-10-05 00:30:39.742+08:00 D/LocationService(12345, main): checkSelfPermission ACCESS_FINE_LOCATION=GRANTED`
+     */
     fun line(
         now: Long,
-        category: String,
-        event: String,
-        fields: List<Pair<String, Any?>>,
+        level: Char,
+        tag: String,
+        message: String,
+        pid: Int,
+        thread: String,
         secrets: Collection<String>
-    ): String {
-        val builder = StringBuilder(timestamp(now))
-            .append(" [").append(category).append("] ").append(event)
-
-        fields.forEach { (name, value) ->
-            if (value != null) builder.append(' ').append(name).append('=').append(value)
-        }
-
-        return redact(builder.toString(), secrets)
-    }
+    ): String = redact("${stamp(now)} $level/$tag($pid, $thread): $message", secrets)
 
     /**
      * Scrubs registered secrets and any credential-looking header or query assignment. Values shorter

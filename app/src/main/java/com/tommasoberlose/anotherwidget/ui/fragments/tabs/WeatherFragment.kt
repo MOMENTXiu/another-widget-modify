@@ -28,6 +28,7 @@ import com.tommasoberlose.anotherwidget.components.MaterialBottomSheetDialog
 import com.tommasoberlose.anotherwidget.databinding.FragmentTabWeatherBinding
 import com.tommasoberlose.anotherwidget.global.Constants
 import com.tommasoberlose.anotherwidget.global.Preferences
+import com.tommasoberlose.anotherwidget.helpers.DebugLogger
 import com.tommasoberlose.anotherwidget.helpers.SettingsStringHelper
 import com.tommasoberlose.anotherwidget.helpers.WeatherHelper
 import com.tommasoberlose.anotherwidget.network.repository.QWeatherAuth
@@ -161,15 +162,17 @@ class WeatherFragment : Fragment() {
 
     private fun setupListener() {
         binding.actionQweatherSettings.setOnClickListener {
+            DebugLogger.d("WeatherSettings", "qweather settings clicked")
             BottomSheetQWeatherSettings(requireContext()) {
                 updateQWeatherSettingsLabel()
                 viewLifecycleOwner.lifecycleScope.launch {
-                    WeatherHelper.updateWeather(requireContext())
+                    WeatherHelper.updateWeather(requireContext(), trigger = "manual_refresh")
                 }
             }.show()
         }
 
         binding.actionCustomLocation.setOnClickListener {
+            DebugLogger.d("WeatherSettings", "custom location settings clicked")
             startActivityForResult(
                 Intent(requireContext(), CustomLocationActivity::class.java),
                 Constants.RESULT_CODE_CUSTOM_LOCATION
@@ -182,8 +185,9 @@ class WeatherFragment : Fragment() {
                 .addItem(getString(R.string.celsius), "C")
                 .addOnSelectItemListener { value ->
                     if (value != Preferences.weatherTempUnit) {
+                        DebugLogger.d("WeatherSettings", "temperature unit changed to=$value")
                         viewLifecycleOwner.lifecycleScope.launch {
-                            WeatherHelper.updateWeather(requireContext())
+                            WeatherHelper.updateWeather(requireContext(), trigger = "manual_refresh")
                         }
                     }
                     Preferences.weatherTempUnit = value

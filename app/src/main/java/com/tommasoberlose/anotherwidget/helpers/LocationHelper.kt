@@ -30,9 +30,13 @@ object LocationHelper {
         return "age=${minutes}m"
     }
 
-    fun saveLocation(latitude: Double, longitude: Double, fixTime: Long) {
+    fun saveLocation(latitude: Double, longitude: Double, fixTime: Long, source: String = "unknown", flowId: String = "") {
         Preferences.customLocationLat = latitude.toString()
         Preferences.customLocationLon = longitude.toString()
         Preferences.lastLocationTimestamp = if (fixTime > 0) fixTime else System.currentTimeMillis()
+
+        DebugLogger.d("LocationCache",
+            "write lat=$latitude lon=$longitude source=$source locationTime=$fixTime" +
+                if (flowId.isEmpty()) "" else " flow=$flowId")
     }
 }

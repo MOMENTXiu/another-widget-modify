@@ -7,6 +7,8 @@ import com.chibatching.kotpref.Kotpref
 import com.tommasoberlose.anotherwidget.R
 import com.tommasoberlose.anotherwidget.global.Constants
 import com.tommasoberlose.anotherwidget.global.Preferences
+import com.tommasoberlose.anotherwidget.helpers.DebugLog
+import com.tommasoberlose.anotherwidget.helpers.DebugLogger
 import com.tommasoberlose.anotherwidget.network.WeatherNetworkApi
 import com.tommasoberlose.anotherwidget.services.LocationService
 import com.tommasoberlose.anotherwidget.ui.fragments.MainFragment
@@ -26,36 +28,49 @@ object WeatherHelper {
     // have no icon for, instead of failing the whole update.
     const val UNKNOWN_ICON = "unknown"
 
-    suspend fun updateWeather(context: Context) {
+    suspend fun updateWeather(context: Context, flowId: String = DebugLog.newFlowId(), trigger: String = "unknown") {
         Kotpref.init(context)
         val networkApi = WeatherNetworkApi(context)
+        DebugLogger.d("WeatherHelper",
+            "updateWeather trigger=$trigger flow=$flowId manualLocation=${Preferences.customLocationAdd != ""} " +
+                "cachedLocation=${LocationHelper.hasCachedLocation()} cachedAgeMs=${LocationHelper.ageMs()}")
+
         when {
             // A manually configured location always wins and never touches the location providers.
             Preferences.customLocationAdd != "" -> {
-                Log.d(Constants.LOG_TAG, "using the manual location")
-                networkApi.updateWeather()
+                DebugLogger.d("LocationCache", "hit source=manual flow=$flowId")
+                networkApi.updateWeather(flowId)
             }
 
             // Recent enough coordinates: refresh the weather without activating any location provider.
             LocationHelper.isCachedLocationFresh() -> {
-                Log.d(Constants.LOG_TAG, "using the cached location (${LocationHelper.describeAge()})")
-                networkApi.updateWeather()
+                DebugLogger.d("LocationCache",
+                    "hit ageMs=${LocationHelper.ageMs()} ttlMs=${Constants.LOCATION_CACHE_TTL} " +
+                        "lat=${Preferences.customLocationLat} lon=${Preferences.customLocationLon} flow=$flowId")
+                networkApi.updateWeather(flowId)
             }
 
             // Stale or missing coordinates: try to refresh them, falling back to the cached ones.
             context.checkGrantedPermission(Manifest.permission.ACCESS_FINE_LOCATION) -> {
-                Log.d(Constants.LOG_TAG, "location cache stale or absent (${LocationHelper.describeAge()}), refreshing")
-                LocationService.requestNewLocation(context)
+                DebugLogger.d("WeatherHelper", "checkSelfPermission ACCESS_FINE_LOCATION=GRANTED flow=$flowId")
+                DebugLogger.d("LocationCache",
+                    "expired ageMs=${LocationHelper.ageMs()} ttlMs=${Constants.LOCATION_CACHE_TTL} flow=$flowId")
+                DebugLogger.d("WeatherHelper", "location refresh delegated to LocationService flow=$flowId")
+                LocationService.requestNewLocation(context, flowId)
             }
 
             // No permission, but an outdated coordinate still beats no weather at all.
             LocationHelper.hasCachedLocation() -> {
-                Log.d(Constants.LOG_TAG, "location permission missing, reusing the stored coordinates (${LocationHelper.describeAge()})")
-                networkApi.updateWeather()
+                DebugLogger.d("WeatherHelper", "checkSelfPermission ACCESS_FINE_LOCATION=DENIED flow=$flowId")
+                DebugLogger.w("LocationCache",
+                    "stale but location permission missing, reusing the stored coordinates " +
+                        "ageMs=${LocationHelper.ageMs()} lat=${Preferences.customLocationLat} lon=${Preferences.customLocationLon} flow=$flowId")
+                networkApi.updateWeather(flowId)
             }
 
             else -> {
-                Log.d(Constants.LOG_TAG, "no location available at all")
+                DebugLogger.d("WeatherHelper", "checkSelfPermission ACCESS_FINE_LOCATION=DENIED flow=$flowId")
+                DebugLogger.w("LocationCache", "miss no cached location and no permission flow=$flowId")
                 Preferences.weatherProviderLocationError = context.getString(R.string.weather_provider_error_missing_location)
                 EventBus.getDefault().post(MainFragment.UpdateUiMessageEvent())
             }
@@ -63,10 +78,11 @@ object WeatherHelper {
     }
 
     fun removeWeather(context: Context) {
+        DebugLogger.d("WeatherRepository", "removing the displayed weather")
         Preferences.remove(Preferences::weatherTemp)
         Preferences.remove(Preferences::weatherRealTempUnit)
         Preferences.remove(Preferences::weatherIcon)
-        MainWidget.updateWidget(context)
+        MainWidget.updateWidget(context, "weather_removed")
     }
 
     fun getWeatherIconResource(context: Context, icon: String, style: Int = Preferences.weatherIconPack): Int {

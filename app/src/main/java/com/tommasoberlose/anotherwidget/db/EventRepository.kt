@@ -106,7 +106,7 @@ class EventRepository(val context: Context) {
             resetNextEventData()
         }
         UpdatesReceiver.setUpdates(context)
-        MainWidget.updateWidget(context)
+        MainWidget.updateWidget(context, "calendar_update")
     }
 
     fun goToPreviousEvent() {
@@ -122,7 +122,7 @@ class EventRepository(val context: Context) {
             resetNextEventData()
         }
         UpdatesReceiver.setUpdates(context)
-        MainWidget.updateWidget(context)
+        MainWidget.updateWidget(context, "calendar_update")
     }
 
     fun getFutureEvents(): List<Event> {

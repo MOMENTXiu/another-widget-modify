@@ -42,15 +42,15 @@ class WeatherNetworkApi(val context: Context) {
      * is missing, older than the network TTL, or was fetched for another place. A failed request
      * keeps the previous forecast, so a transient failure never blanks the widget.
      */
-    suspend fun updateWeather() {
+    suspend fun updateWeather(flowId: String = DebugLog.newFlowId()) {
         Kotpref.init(context)
         Preferences.weatherProviderError = "-"
         Preferences.weatherProviderLocationError = ""
 
         if (!Preferences.showWeather || Preferences.customLocationLat == "" || Preferences.customLocationLon == "") {
-            WeatherHelper.removeWeather(
-                context
-            )
+            DebugLogger.w("WeatherRepository",
+                "weather update skipped reason=${if (!Preferences.showWeather) "weather_disabled" else "missing_coordinates"} flow=$flowId")
+            WeatherHelper.removeWeather(context)
 
             EventBus.getDefault().post(MainFragment.UpdateUiMessageEvent())
             return
@@ -59,66 +59,71 @@ class WeatherNetworkApi(val context: Context) {
         val latitude = Preferences.customLocationLat.toDoubleOrNull()
         val longitude = Preferences.customLocationLon.toDoubleOrNull()
         if (latitude == null || longitude == null) {
-            Log.d(Constants.LOG_TAG, "no usable coordinates, skipping the weather update")
+            DebugLogger.w("WeatherRepository",
+                "weather update skipped reason=bad_coordinates lat=${Preferences.customLocationLat} lon=${Preferences.customLocationLon} flow=$flowId")
             Preferences.weatherProviderError = context.getString(R.string.weather_provider_error_missing_location)
             EventBus.getDefault().post(MainFragment.UpdateUiMessageEvent())
             return
         }
 
         if (!QWeatherAuth.isConfigured()) {
+            DebugLogger.w("WeatherRepository", "weather update skipped reason=credentials_missing flow=$flowId")
             Preferences.weatherProviderError = context.getString(R.string.weather_provider_error_missing_key)
             Preferences.weatherProviderLocationError = ""
 
-            WeatherHelper.removeWeather(
-                context
-            )
+            WeatherHelper.removeWeather(context)
             EventBus.getDefault().post(MainFragment.UpdateUiMessageEvent())
             return
         }
 
         try {
             var forecast = WeatherCache.load()
-            Log.d(Constants.LOG_TAG, "weather update triggered: ${describeCache(forecast)}, coordinates $latitude,$longitude")
+            DebugLogger.d("WeatherRepository",
+                "weather update lat=$latitude lon=$longitude ${describeCache(forecast)} flow=$flowId")
 
-            if (needsRefresh(forecast, latitude, longitude)) {
-                Log.d(Constants.LOG_TAG, "weather cache miss, requesting the QWeather hourly forecast")
-                val refreshed = requestForecast(latitude, longitude)
+            val refreshedOverNetwork: Boolean
+            if (needsRefresh(forecast, latitude, longitude, flowId)) {
+                val refreshed = requestForecast(latitude, longitude, flowId)
 
                 if (refreshed != null) {
                     WeatherCache.save(refreshed)
                     forecast = refreshed
-                    DebugLogger.log("WEATHER_CACHE", "refresh_success", "hours" to refreshed.hours.size,
-                        "lat" to refreshed.latitude, "lon" to refreshed.longitude)
+                    refreshedOverNetwork = true
                 } else {
-                    Log.d(Constants.LOG_TAG, "QWeather refresh failed, keeping the cached forecast")
-                    DebugLogger.log("WEATHER_CACHE", "refresh_failed_keep_old",
-                        "kept" to (forecast != null),
-                        "cacheAgeMs" to (forecast?.let { WeatherCache.ageOf(it) } ?: 0L))
+                    DebugLogger.w("WeatherCache",
+                        "refresh failed, keeping the old forecast kept=${forecast != null} " +
+                            "cacheAgeMs=${forecast?.let { WeatherCache.ageOf(it) } ?: 0L} flow=$flowId")
+                    refreshedOverNetwork = false
                 }
             } else {
-                Log.d(Constants.LOG_TAG, "weather cache hit, no network request")
+                refreshedOverNetwork = false
             }
 
             forecast?.let { cached ->
                 val hour = WeatherCache.selectHour(cached)
 
                 if (hour == null) {
-                    Log.d(Constants.LOG_TAG, "no cached hour close enough to now, leaving the weather as it is")
-                    DebugLogger.log("WEATHER", "hourly_select", "result" to "none",
-                        "cacheAgeMs" to WeatherCache.ageOf(cached), "hours" to cached.hours.size)
+                    DebugLogger.w("WeatherRepository",
+                        "no cached hour close enough to now, leaving the weather as it is " +
+                            "cacheAgeMs=${WeatherCache.ageOf(cached)} hours=${cached.hours.size} flow=$flowId")
                 } else {
-                    DebugLogger.log("WEATHER", "hourly_select",
-                        "now" to DebugLog.timestamp(System.currentTimeMillis()),
-                        "selectedForecastTime" to DebugLog.timestamp(hour.forecastTime),
-                        "index" to cached.hours.indexOf(hour),
-                        "conditionCode" to hour.code,
-                        "temperature" to hour.temperatureC,
-                        "cacheAgeMs" to WeatherCache.ageOf(cached))
-                    display(hour)
+                    DebugLogger.d("WeatherRepository",
+                        "hour selected index=${cached.hours.indexOf(hour)} forecastTime=${DebugLog.timestamp(hour.forecastTime)} " +
+                            "code=${hour.code} temperature=${hour.temperatureC} cacheAgeMs=${WeatherCache.ageOf(cached)} flow=$flowId")
+                    display(hour, flowId)
                 }
+            }
+
+            when {
+                forecast == null ->
+                    DebugLogger.w("WeatherRepository", "weather flow failed reason=no_usable_forecast flow=$flowId")
+                else ->
+                    DebugLogger.d("WeatherRepository",
+                        "weather flow complete source=${if (refreshedOverNetwork) "network" else "cache"} flow=$flowId")
             }
         } catch (ex: Exception) {
             // A malformed response or an unreachable API host must never take the app down.
+            DebugLogger.e("WeatherRepository", "weather flow failed reason=exception flow=$flowId", ex)
             ex.printStackTrace()
             Preferences.weatherProviderError = context.getString(R.string.weather_provider_error_generic)
             Preferences.weatherProviderLocationError = ""
@@ -140,8 +145,10 @@ class WeatherNetworkApi(val context: Context) {
         // access is granted; the request only has to prove that the account works.
         val latitude = Preferences.customLocationLat.toDoubleOrNull() ?: REFERENCE_LATITUDE
         val longitude = Preferences.customLocationLon.toDoubleOrNull() ?: REFERENCE_LONGITUDE
+        val flowId = DebugLog.newFlowId()
 
         return try {
+            DebugLogger.d("QWeatherApi", "credential check request host=${QWeatherAuth.baseUrl(host)} lat=$latitude lon=$longitude flow=$flowId")
             val repository = QWeatherRepository(context, QWeatherAuth.baseUrl(host), key, androidRestriction)
 
             when (val response = repository.getWeather(latitude, longitude)) {
@@ -149,13 +156,14 @@ class WeatherNetworkApi(val context: Context) {
                     val hours = parseHours(response.body)
 
                     if (hours.isEmpty()) {
+                        DebugLogger.w("QWeatherApi", "credential check failed reason=no_usable_hour flow=$flowId")
                         QWeatherCheck(false, context.getString(R.string.weather_provider_error_generic))
                     } else {
                         val celsius = hours.first().temperatureC.toFloat()
                         val temperature = if (Preferences.weatherTempUnit == "F") celsius * 9f / 5f + 32f else celsius
                         val condition = response.body.firstConditionText()
 
-                        Log.d(Constants.LOG_TAG, "credentials check succeeded, ${hours.size} hours returned")
+                        DebugLogger.d("QWeatherApi", "credential check succeeded entries=${hours.size} flow=$flowId")
                         QWeatherCheck(
                             true,
                             context.getString(
@@ -168,20 +176,23 @@ class WeatherNetworkApi(val context: Context) {
                     }
                 }
                 is NetworkResponse.ServerError -> {
-                    Log.d(Constants.LOG_TAG, "credentials check rejected with HTTP ${response.code}")
+                    DebugLogger.w("QWeatherApi", "credential check rejected status=${response.code} flow=$flowId")
                     QWeatherCheck(false, qWeatherErrorMessage(response.code, response.body))
                 }
                 is NetworkResponse.NetworkError -> {
-                    Log.d(Constants.LOG_TAG, "credentials check failed: ${response.error.javaClass.simpleName}: ${response.error.message}")
+                    DebugLogger.w("QWeatherApi",
+                        "credential check failed type=${response.error.javaClass.simpleName} message=${response.error.message} flow=$flowId")
                     QWeatherCheck(false, connectionErrorMessage(response.error))
                 }
                 else -> {
                     val cause = (response as? NetworkResponse.UnknownError)?.error
-                    Log.w(Constants.LOG_TAG, "credentials check failed unexpectedly: ${cause?.javaClass?.simpleName}: ${cause?.message}")
+                    DebugLogger.w("QWeatherApi",
+                        "credential check failed unexpectedly type=${cause?.javaClass?.simpleName} message=${cause?.message} flow=$flowId")
                     QWeatherCheck(false, unexpectedErrorMessage(cause))
                 }
             }
         } catch (ex: Exception) {
+            DebugLogger.e("QWeatherApi", "credential check failed reason=exception flow=$flowId", ex)
             ex.printStackTrace()
             QWeatherCheck(false, context.getString(R.string.weather_provider_error_generic))
         }
@@ -193,122 +204,100 @@ class WeatherNetworkApi(val context: Context) {
             ?.let { it["condition"] as? LinkedTreeMap<*, *> }
             ?.get("text") as? String
 
-    private fun needsRefresh(forecast: CachedWeatherForecast?, latitude: Double, longitude: Double): Boolean {
+    private fun needsRefresh(forecast: CachedWeatherForecast?, latitude: Double, longitude: Double, flowId: String): Boolean {
         if (forecast == null) {
-            DebugLogger.log("WEATHER_CACHE", "miss", "currentLat" to latitude, "currentLon" to longitude)
+            DebugLogger.d("WeatherCache", "miss currentLat=$latitude currentLon=$longitude flow=$flowId")
             return true
         }
 
         val distance = WeatherCache.distanceTo(forecast, latitude, longitude)
         if (distance > Constants.WEATHER_LOCATION_CHANGE_THRESHOLD) {
-            DebugLogger.log("LOCATION", "movement",
-                "oldLat" to forecast.latitude,
-                "oldLon" to forecast.longitude,
-                "newLat" to latitude,
-                "newLon" to longitude,
-                "distanceMeters" to distance.toInt(),
-                "thresholdMeters" to Constants.WEATHER_LOCATION_CHANGE_THRESHOLD.toInt(),
-                "weatherCacheInvalidated" to true)
+            DebugLogger.d("WeatherCache",
+                "invalidate reason=location_changed oldLat=${forecast.latitude} oldLon=${forecast.longitude} " +
+                    "newLat=$latitude newLon=$longitude distanceMeters=${distance.toInt()} " +
+                    "thresholdMeters=${Constants.WEATHER_LOCATION_CHANGE_THRESHOLD.toInt()} flow=$flowId")
             return true
         }
 
         if (!WeatherCache.isFresh(forecast)) {
-            DebugLogger.log("WEATHER_CACHE", "stale",
-                "cacheAgeMs" to WeatherCache.ageOf(forecast),
-                "ttlMs" to Constants.WEATHER_CACHE_TTL,
-                "cachedLat" to forecast.latitude,
-                "cachedLon" to forecast.longitude,
-                "currentLat" to latitude,
-                "currentLon" to longitude)
+            DebugLogger.d("WeatherCache",
+                "expired ageMs=${WeatherCache.ageOf(forecast)} ttlMs=${Constants.WEATHER_CACHE_TTL} " +
+                    "cachedLat=${forecast.latitude} cachedLon=${forecast.longitude} flow=$flowId")
             return true
         }
 
         // Fresh, but it may already have run out of hours to display.
         if (WeatherCache.selectHour(forecast) == null) {
-            DebugLogger.log("WEATHER_CACHE", "refresh_required", "reason" to "no_usable_hour",
-                "cacheAgeMs" to WeatherCache.ageOf(forecast))
+            DebugLogger.d("WeatherCache",
+                "refresh required reason=no_usable_hour cacheAgeMs=${WeatherCache.ageOf(forecast)} flow=$flowId")
             return true
         }
 
-        DebugLogger.log("WEATHER_CACHE", "hit",
-            "cacheAgeMs" to WeatherCache.ageOf(forecast),
-            "ttlMs" to Constants.WEATHER_CACHE_TTL,
-            "cachedLat" to forecast.latitude,
-            "cachedLon" to forecast.longitude,
-            "currentLat" to latitude,
-            "currentLon" to longitude,
-            "hours" to forecast.hours.size)
+        DebugLogger.d("WeatherCache",
+            "hit ageMs=${WeatherCache.ageOf(forecast)} ttlMs=${Constants.WEATHER_CACHE_TTL} " +
+                "cachedLat=${forecast.latitude} cachedLon=${forecast.longitude} " +
+                "currentLat=$latitude currentLon=$longitude entries=${forecast.hours.size} flow=$flowId")
         return false
     }
 
-    private suspend fun requestForecast(latitude: Double, longitude: Double): CachedWeatherForecast? {
+    private suspend fun requestForecast(latitude: Double, longitude: Double, flowId: String): CachedWeatherForecast? {
         val startedAt = System.currentTimeMillis()
 
-        DebugLogger.log("WEATHER_API", "request_start",
-            "endpoint" to "hourly",
-            "host" to QWeatherAuth.baseUrl(),
-            "lat" to latitude,
-            "lon" to longitude,
-            "hours" to 24,
-            "localTime" to true)
+        DebugLogger.d("QWeatherApi",
+            "request endpoint=hourly host=${QWeatherAuth.baseUrl()} lat=$latitude lon=$longitude hours=24 localTime=true flow=$flowId")
 
         return try {
             when (val response = QWeatherRepository(context).getWeather(latitude, longitude)) {
                 is NetworkResponse.Success -> {
+                    DebugLogger.d("QWeatherApi",
+                        "response status=${response.code} durationMs=${System.currentTimeMillis() - startedAt} flow=$flowId")
+                    DebugLogger.d("QWeatherApi", "parse start flow=$flowId")
                     val hours = parseHours(response.body)
 
                     if (hours.isEmpty()) {
-                        Log.w(Constants.LOG_TAG, "QWeather response held no usable hourly entry")
-                        DebugLogger.log("WEATHER_API", "response", "status" to response.code,
-                            "durationMs" to (System.currentTimeMillis() - startedAt), "success" to false,
-                            "reason" to "no_usable_hour")
+                        DebugLogger.w("QWeatherApi", "parse failed reason=no_usable_entry flow=$flowId")
                         Preferences.weatherProviderError = context.getString(R.string.weather_provider_error_generic)
                         Preferences.weatherProviderLocationError = ""
                         null
                     } else {
-                        Log.d(Constants.LOG_TAG, "QWeather refresh succeeded, ${hours.size} hours cached")
-                        DebugLogger.log("WEATHER_API", "response", "status" to response.code,
-                            "durationMs" to (System.currentTimeMillis() - startedAt), "success" to true,
-                            "hourCount" to hours.size,
-                            "firstForecastTime" to DebugLog.timestamp(hours.first().forecastTime),
-                            "lastForecastTime" to DebugLog.timestamp(hours.last().forecastTime))
+                        DebugLogger.d("QWeatherApi",
+                            "parse success entries=${hours.size} firstForecastTime=${DebugLog.timestamp(hours.first().forecastTime)} " +
+                                "lastForecastTime=${DebugLog.timestamp(hours.last().forecastTime)} flow=$flowId")
                         Preferences.weatherProviderError = ""
                         Preferences.weatherProviderLocationError = ""
                         CachedWeatherForecast(System.currentTimeMillis(), latitude, longitude, hours)
                     }
                 }
                 is NetworkResponse.ServerError -> {
-                    Log.d(Constants.LOG_TAG, "QWeather refresh rejected with HTTP ${response.code}")
-                    DebugLogger.log("WEATHER_API", "request_failed", "reason" to "http_status",
-                        "status" to response.code,
-                        "durationMs" to (System.currentTimeMillis() - startedAt))
+                    DebugLogger.w("QWeatherApi",
+                        "request rejected status=${response.code} errorType=${errorTypeOf(response.body)} " +
+                            "durationMs=${System.currentTimeMillis() - startedAt} flow=$flowId")
                     Preferences.weatherProviderError = qWeatherErrorMessage(response.code, response.body)
                     Preferences.weatherProviderLocationError = ""
                     null
                 }
                 is NetworkResponse.NetworkError -> {
-                    Log.d(Constants.LOG_TAG, "QWeather refresh failed: ${response.error.javaClass.simpleName}: ${response.error.message}")
-                    DebugLogger.log("WEATHER_API", "request_failed",
-                        "reason" to networkFailureReason(response.error),
-                        "exception" to response.error.javaClass.simpleName,
-                        "durationMs" to (System.currentTimeMillis() - startedAt))
+                    DebugLogger.w("QWeatherApi",
+                        "request failed type=${response.error.javaClass.simpleName} message=${response.error.message} " +
+                            "durationMs=${System.currentTimeMillis() - startedAt} flow=$flowId",
+                        response.error)
                     Preferences.weatherProviderError = connectionErrorMessage(response.error)
                     Preferences.weatherProviderLocationError = ""
                     null
                 }
                 else -> {
                     val cause = (response as? NetworkResponse.UnknownError)?.error
-                    Log.w(Constants.LOG_TAG, "QWeather refresh failed unexpectedly: ${cause?.javaClass?.simpleName}: ${cause?.message}")
-                    DebugLogger.log("WEATHER_API", "request_failed",
-                        "reason" to if (cause is EOFException) "parse" else "exception",
-                        "exception" to (cause?.javaClass?.simpleName ?: "unknown"),
-                        "durationMs" to (System.currentTimeMillis() - startedAt))
+                    DebugLogger.w("QWeatherApi",
+                        "request failed type=${cause?.javaClass?.simpleName} message=${cause?.message} " +
+                            "durationMs=${System.currentTimeMillis() - startedAt} flow=$flowId",
+                        cause)
                     Preferences.weatherProviderError = unexpectedErrorMessage(cause)
                     Preferences.weatherProviderLocationError = ""
                     null
                 }
             }
         } catch (ex: Exception) {
+            DebugLogger.e("QWeatherApi", "request failed reason=exception flow=$flowId", ex)
             ex.printStackTrace()
             Preferences.weatherProviderError = context.getString(R.string.weather_provider_error_generic)
             Preferences.weatherProviderLocationError = ""
@@ -337,7 +326,7 @@ class WeatherNetworkApi(val context: Context) {
         }.sortedBy { it.forecastTime }
     }
 
-    private fun display(hour: CachedWeatherHour) {
+    private fun display(hour: CachedWeatherHour, flowId: String) {
         // The cache holds Celsius; the user preference decides what is displayed.
         val celsius = hour.temperatureC.toFloat()
 
@@ -348,16 +337,22 @@ class WeatherNetworkApi(val context: Context) {
         Preferences.weatherProviderError = ""
         Preferences.weatherProviderLocationError = ""
 
-        Log.d(Constants.LOG_TAG, "displaying ${SimpleDateFormat("MM-dd HH:mm", Locale.US).format(Date(hour.forecastTime))} code=${hour.code} temp=${hour.temperatureC}C")
-        MainWidget.updateWidget(context, "weather_refresh")
+        DebugLogger.d("WeatherRepository",
+            "display forecastTime=${SimpleDateFormat("MM-dd HH:mm", Locale.US).format(Date(hour.forecastTime))} " +
+                "code=${hour.code} temp=${hour.temperatureC}C icon=${Preferences.weatherIcon} flow=$flowId")
+        MainWidget.updateWidget(context, "weather_refresh", flowId)
     }
 
     private fun describeCache(forecast: CachedWeatherForecast?): String {
         if (forecast == null) return "no cached forecast"
 
         val age = TimeUnit.MINUTES.convert(WeatherCache.ageOf(forecast), TimeUnit.MILLISECONDS)
-        return "cached forecast age=${age}m hours=${forecast.hours.size}"
+        return "cached forecast age=${age}m entries=${forecast.hours.size}"
     }
+
+    /** The problem+json error type of a rejected response, safe for the log. */
+    private fun errorTypeOf(body: HashMap<String, Any>?): String =
+        (body?.get("error") as? LinkedTreeMap<*, *>)?.get("type") as? String ?: "unknown"
 
     /**
      * A host name that does not resolve used to be reported as a plain connection error, which sent
@@ -375,13 +370,6 @@ class WeatherNetworkApi(val context: Context) {
         } else {
             context.getString(R.string.weather_provider_error_generic)
         }
-
-    private fun networkFailureReason(error: IOException): String = when (error) {
-        is UnknownHostException -> "dns"
-        is SocketTimeoutException -> "timeout"
-        is SSLException -> "tls"
-        else -> "io"
-    }
 
     private fun isDaytimeNow(): Boolean = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 6..18
 
@@ -405,7 +393,7 @@ class WeatherNetworkApi(val context: Context) {
      * tell a wrong API host from a wrong key, because both are easy to get wrong while configuring.
      */
     private fun qWeatherErrorMessage(httpCode: Int, body: HashMap<String, Any>?): String {
-        val errorType = ((body?.get("error") as? LinkedTreeMap<*, *>)?.get("type") as? String).orEmpty()
+        val errorType = errorTypeOf(body)
 
         return when {
             errorType.contains("invalid-host") -> context.getString(R.string.weather_provider_error_invalid_host)

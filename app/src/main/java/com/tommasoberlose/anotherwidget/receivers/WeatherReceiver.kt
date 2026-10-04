@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.Intent
 import com.tommasoberlose.anotherwidget.global.Actions
 import com.tommasoberlose.anotherwidget.global.Preferences
+import com.tommasoberlose.anotherwidget.helpers.DebugLog
+import com.tommasoberlose.anotherwidget.helpers.DebugLogger
 import com.tommasoberlose.anotherwidget.helpers.WeatherHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -17,16 +19,23 @@ import java.util.*
 class WeatherReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        DebugLogger.d("WeatherReceiver", "onReceive action=${intent.action}")
+
         when (intent.action) {
             Intent.ACTION_BOOT_COMPLETED,
             Intent.ACTION_MY_PACKAGE_REPLACED,
             Intent.ACTION_TIMEZONE_CHANGED,
             Intent.ACTION_LOCALE_CHANGED,
-            Intent.ACTION_TIME_CHANGED -> setUpdates(context)
+            Intent.ACTION_TIME_CHANGED -> {
+                DebugLogger.d("WeatherReceiver", "rescheduling weather updates after ${intent.action}")
+                setUpdates(context)
+            }
 
             Actions.ACTION_WEATHER_UPDATE -> {
+                val flowId = DebugLog.newFlowId()
+                DebugLogger.d("WeatherReceiver", "scheduled weather refresh starting flow=$flowId")
                 GlobalScope.launch(Dispatchers.IO) {
-                    WeatherHelper.updateWeather(context)
+                    WeatherHelper.updateWeather(context, flowId, trigger = "scheduled_refresh")
                 }
             }
         }
@@ -48,6 +57,7 @@ class WeatherReceiver : BroadcastReceiver() {
                     else -> 60
                 }
                 with(context.getSystemService(Context.ALARM_SERVICE) as AlarmManager) {
+                    DebugLogger.d("WeatherReceiver", "schedule repeating weather updates intervalMs=$interval")
                     setRepeating(
                         AlarmManager.RTC,
                         Calendar.getInstance().timeInMillis,
@@ -55,11 +65,14 @@ class WeatherReceiver : BroadcastReceiver() {
                         PendingIntent.getBroadcast(context, 0, Intent(context, WeatherReceiver::class.java).apply { action = Actions.ACTION_WEATHER_UPDATE }, 0)
                     )
                 }
+            } else {
+                DebugLogger.d("WeatherReceiver", "weather disabled, no weather updates scheduled")
             }
         }
 
         fun setOneTimeUpdate(context: Context) {
             if (Preferences.showWeather) {
+                DebugLogger.d("WeatherReceiver", "schedule one time weather updates in 10/20/30 minutes")
                 listOf(10, 20, 30).forEach {
                     with(context.getSystemService(Context.ALARM_SERVICE) as AlarmManager) {
                         setExactAndAllowWhileIdle(
@@ -74,6 +87,7 @@ class WeatherReceiver : BroadcastReceiver() {
 
         fun removeUpdates(context: Context) {
             with(context.getSystemService(Context.ALARM_SERVICE) as AlarmManager) {
+                DebugLogger.d("WeatherReceiver", "cancel weather updates")
                 cancel(PendingIntent.getBroadcast(context, 0, Intent(context, WeatherReceiver::class.java).apply { action = Actions.ACTION_WEATHER_UPDATE }, 0))
                 listOf(10, 20, 30).forEach {
                     cancel(PendingIntent.getBroadcast(context, it, Intent(context, WeatherReceiver::class.java).apply { action = Actions.ACTION_WEATHER_UPDATE }, 0))

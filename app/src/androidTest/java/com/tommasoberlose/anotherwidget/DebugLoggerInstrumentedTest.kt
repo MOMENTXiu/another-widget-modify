@@ -16,8 +16,9 @@ import org.junit.runner.RunWith
 import java.io.File
 
 /**
- * Runs the debug logger on a real device: the gating, the file it produces, the export header, the
- * redaction and its own failure isolation. The user's debugMode value is put back afterwards.
+ * Runs the debug logger on a real device: the gating, the logcat-shaped record it produces, the
+ * export header, the redaction and its own failure isolation. The user's debugMode value is put
+ * back afterwards.
  */
 @RunWith(AndroidJUnit4::class)
 class DebugLoggerInstrumentedTest {
@@ -37,15 +38,8 @@ class DebugLoggerInstrumentedTest {
         DebugLogger.clear(context)
     }
 
-    private fun logDirectory(): File = DebugLogger.directory(context)
-
-    private fun logText(): String? =
-        DebugLogFiles.read(logDirectory())
-
-    private object DebugLogFiles {
-        fun read(dir: File): String? =
-            java.io.File(dir, "debug.log").takeIf { it.exists() }?.readText()
-    }
+    private fun currentLog(): String? =
+        File(DebugLogger.directory(context), "debug.log").takeIf { it.exists() }?.readText()
 
     // --- 1 & 2: off by default, and silent while off ---
 
@@ -59,57 +53,52 @@ class DebugLoggerInstrumentedTest {
     fun writesNothingWhileDisabled() {
         Preferences.debugMode = 0
 
-        DebugLogger.log("LOCATION", "flow_start", "trigger" to "test")
+        DebugLogger.d("LocationService", "requestLocationUpdates provider=network")
         DebugLogger.flush()
 
-        assertNull("no file should exist while Debug Mode is off", logText())
+        assertNull("no file should exist while Debug Mode is off", currentLog())
     }
 
-    // --- 3 to 6: the decision chain is recorded ---
+    // --- 3 to 6: a realistic runtime chain is recorded ---
 
     @Test
-    fun recordsTheWholeChainWhileEnabled() {
+    fun recordsTheRuntimeChainWhileEnabled() {
         Preferences.debugMode = 1
+        val flow = "abc123"
 
-        // location
-        DebugLogger.log("LOCATION", "flow_start", "trigger" to "weather_refresh", "manual" to true)
-        DebugLogger.log("LOCATION", "provider_state", "provider" to "gps", "available" to true, "enabled" to true)
-        DebugLogger.log("LOCATION", "permission", "fine" to true, "coarse" to true, "background" to false)
-        DebugLogger.log("LOCATION", "last_known", "provider" to "network", "result" to null)
-        DebugLogger.log("LOCATION", "request_start", "provider" to "network", "timeoutMs" to 15000)
-        DebugLogger.log("LOCATION", "result", "provider" to "network", "lat" to 23.13, "lon" to 113.26,
-            "accuracy" to 30, "durationMs" to 373)
-        DebugLogger.log("LOCATION", "selected", "source" to "fresh_fix", "provider" to "network")
-        DebugLogger.log("LOCATION", "movement", "distanceMeters" to 12453,
-            "thresholdMeters" to 10000, "weatherCacheInvalidated" to true)
-
-        // weather api + cache + hourly selection
-        DebugLogger.log("WEATHER_API", "request_start", "endpoint" to "hourly",
-            "host" to "example.re.qweatherapi.com", "hours" to 24, "localTime" to true)
-        DebugLogger.log("WEATHER_API", "response", "status" to 200, "durationMs" to 373,
-            "success" to true, "hourCount" to 24)
-        DebugLogger.log("WEATHER_CACHE", "miss")
-        DebugLogger.log("WEATHER_CACHE", "refresh_failed_keep_old", "kept" to true)
-        DebugLogger.log("WEATHER", "hourly_select", "selectedForecastTime" to "2026-10-04T12:00:00.000+08:00",
-            "index" to 0, "conditionCode" to "101", "temperature" to 30.0)
-
-        // widget
-        DebugLogger.log("WIDGET", "update_start", "reason" to "weather_refresh")
-        DebugLogger.log("WIDGET", "update_complete", "durationMs" to 12)
+        DebugLogger.d("MainActivity", "onResume")
+        DebugLogger.d("Settings", "refresh widget clicked")
+        DebugLogger.d("WidgetProvider", "update requested reason=manual_refresh widgets=1 flow=$flow")
+        DebugLogger.d("WeatherReceiver", "onReceive action=com.tommasoberlose.anotherwidget.action.ACTION_WEATHER_UPDATE")
+        DebugLogger.d("WeatherHelper", "updateWeather trigger=scheduled_refresh flow=$flow cachedAgeMs=60000")
+        DebugLogger.d("LocationService", "checkSelfPermission ACCESS_FINE_LOCATION=GRANTED flow=$flow")
+        DebugLogger.d("LocationService", "isProviderEnabled provider=network enabled=true flow=$flow")
+        DebugLogger.d("LocationService", "requestLocationUpdates providers=[network] timeoutMs=15000 flow=$flow")
+        DebugLogger.d("LocationService", "onLocationChanged provider=network accuracy=30.0 flow=$flow")
+        DebugLogger.d("LocationCache", "write lat=23.13 lon=113.26 source=network flow=$flow")
+        DebugLogger.d("WeatherCache", "miss currentLat=23.13 currentLon=113.26 flow=$flow")
+        DebugLogger.d("QWeatherApi", "request endpoint=hourly host=example.re.qweatherapi.com lat=23.13 lon=113.26 hours=24 flow=$flow")
+        DebugLogger.d("QWeatherApi", "response status=200 durationMs=373 flow=$flow")
+        DebugLogger.d("QWeatherApi", "parse success entries=24 flow=$flow")
+        DebugLogger.d("WeatherCache", "write entries=24 lat=23.13 lon=113.26")
+        DebugLogger.d("WeatherRepository", "hour selected index=12 forecastTime=2026-10-05T01:00:00.000+08:00 flow=$flow")
+        DebugLogger.d("WeatherRepository", "weather flow complete source=network flow=$flow")
+        DebugLogger.d("WidgetProvider", "onReceive action=android.appwidget.action.APPWIDGET_UPDATE appWidgetIds=[412]")
+        DebugLogger.d("WidgetUpdater", "update start appWidgetId=412 flow=$flow")
+        DebugLogger.d("WidgetUpdater", "apply RemoteViews appWidgetId=412")
+        DebugLogger.d("WidgetUpdater", "update complete appWidgetId=412 durationMs=18")
 
         DebugLogger.flush()
 
-        val text = logText()
+        val text = currentLog()
         assertNotNull("no log file was written while Debug Mode was on", text)
 
         listOf(
-            "[LOCATION] flow_start", "[LOCATION] provider_state", "[LOCATION] permission",
-            "[LOCATION] last_known", "[LOCATION] request_start", "[LOCATION] result",
-            "[LOCATION] selected", "[LOCATION] movement",
-            "[WEATHER_API] request_start", "[WEATHER_API] response",
-            "[WEATHER_CACHE] miss", "[WEATHER_CACHE] refresh_failed_keep_old",
-            "[WEATHER] hourly_select",
-            "[WIDGET] update_start", "[WIDGET] update_complete"
+            "D/MainActivity(", "D/Settings(", "D/WidgetProvider(", "D/WeatherReceiver(",
+            "D/WeatherHelper(", "D/LocationService(", "D/LocationCache(", "D/WeatherCache(",
+            "D/QWeatherApi(", "D/WeatherRepository(", "D/WidgetUpdater(",
+            "refresh widget clicked", "onLocationChanged provider=network", "parse success entries=24",
+            "weather flow complete source=network", "update complete appWidgetId=412"
         ).forEach { assertTrue("missing $it", text!!.contains(it)) }
     }
 
@@ -121,9 +110,8 @@ class DebugLoggerInstrumentedTest {
         val key = "e74c22003b6e4744a95f322a6a84179"
         DebugLogger.rememberSecret(key)
 
-        DebugLogger.log("WEATHER_API", "request_start", "endpoint" to "hourly",
-            "host" to "example.re.qweatherapi.com", "key" to key)
-        DebugLogger.log("WIDGET", "update_complete", "durationMs" to 5)
+        DebugLogger.d("QWeatherApi", "request endpoint=hourly host=example.re.qweatherapi.com key=$key")
+        DebugLogger.e("QWeatherApi", "request failed type=SocketTimeoutException", java.net.SocketTimeoutException("connect timed out"))
         DebugLogger.flush()
 
         val exported = DebugLogger.exportText(context)
@@ -135,10 +123,29 @@ class DebugLoggerInstrumentedTest {
         assertTrue(exported.contains("Device: "))
         assertTrue(exported.contains("Debug Mode: 1"))
         assertTrue(exported.contains("Exported At: "))
-        assertTrue(exported.contains("[WEATHER_API] request_start"))
+        assertTrue(exported.contains("D/QWeatherApi("))
 
         assertFalse(exported.contains(key))
         assertFalse(exported.contains("X-QW-Api-Key: e74c"))
+    }
+
+    @Test
+    fun exceptionsCarryARedactedStackTrace() {
+        Preferences.debugMode = 1
+        val key = "e74c22003b6e4744a95f322a6a84179"
+        DebugLogger.rememberSecret(key)
+
+        val error = IllegalStateException("Authorization: Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9 failed at $key")
+        DebugLogger.e("WeatherRepository", "weather flow failed reason=exception", error)
+        DebugLogger.flush()
+
+        val text = currentLog()
+        assertNotNull(text)
+        assertTrue(text!!.contains("E/WeatherRepository("))
+        assertTrue(text.contains("IllegalStateException"))
+        assertFalse("the jwt must not survive", text.contains("eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9"))
+        assertFalse("the registered key must not survive", text.contains(key))
+        assertFalse(text.contains("e74c22003b6e4744a95f322a6a84179"))
     }
 
     // --- 8: clearing ---
@@ -146,14 +153,14 @@ class DebugLoggerInstrumentedTest {
     @Test
     fun clearRemovesEveryLogFile() {
         Preferences.debugMode = 1
-        DebugLogger.log("WIDGET", "update_start", "reason" to "test")
+        DebugLogger.d("WidgetUpdater", "update complete appWidgetId=1 durationMs=3")
         DebugLogger.flush()
 
-        assertNotNull(logText())
+        assertNotNull(currentLog())
 
         val removed = DebugLogger.clear(context)
         assertTrue(removed > 0)
-        assertNull(logText())
+        assertNull(currentLog())
         assertNull(DebugLogger.exportText(context))
     }
 
@@ -164,13 +171,13 @@ class DebugLoggerInstrumentedTest {
         Preferences.debugMode = 1
 
         // A directory where the log file should be makes every append fail.
-        java.io.File(logDirectory(), "debug.log").apply {
+        File(DebugLogger.directory(context), "debug.log").apply {
             delete()
             mkdirs()
         }
 
-        DebugLogger.log("WIDGET", "update_start", "reason" to "test")
-        DebugLogger.log("LOCATION", "flow_start", "trigger" to "test")
+        DebugLogger.d("WidgetProvider", "update requested reason=manual_refresh widgets=1")
+        DebugLogger.d("LocationService", "onCreate")
         DebugLogger.flush()
 
         // Reaching this line is the assertion: the logger swallowed its own failure.

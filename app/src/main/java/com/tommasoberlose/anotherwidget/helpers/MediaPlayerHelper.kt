@@ -105,7 +105,7 @@ object MediaPlayerHelper {
         } else {
             removeMediaInfo(context)
         }
-        MainWidget.updateWidget(context)
+        MainWidget.updateWidget(context, "media_update")
     }
 
     private fun removeMediaInfo(context: Context) {

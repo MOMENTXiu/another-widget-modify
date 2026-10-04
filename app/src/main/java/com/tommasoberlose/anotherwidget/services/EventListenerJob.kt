@@ -10,10 +10,12 @@ import android.content.Context
 import android.os.Build
 import android.provider.CalendarContract
 import com.tommasoberlose.anotherwidget.helpers.CalendarHelper
+import com.tommasoberlose.anotherwidget.helpers.DebugLogger
 
 
 class EventListenerJob : JobService() {
     override fun onStartJob(params: JobParameters): Boolean {
+        DebugLogger.d("EventListenerJob", "onStartJob")
         CalendarHelper.updateEventList(this)
         schedule(
             this

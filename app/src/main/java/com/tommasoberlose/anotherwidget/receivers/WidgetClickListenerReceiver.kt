@@ -7,6 +7,7 @@ import android.net.Uri
 import com.tommasoberlose.anotherwidget.R
 import com.tommasoberlose.anotherwidget.global.Actions
 import com.tommasoberlose.anotherwidget.global.Preferences
+import com.tommasoberlose.anotherwidget.helpers.DebugLogger
 import com.tommasoberlose.anotherwidget.helpers.IntentHelper
 import com.tommasoberlose.anotherwidget.utils.toast
 
@@ -14,6 +15,7 @@ import com.tommasoberlose.anotherwidget.utils.toast
 class WidgetClickListenerReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        DebugLogger.d("WidgetClickListenerReceiver", "onReceive action=${intent.action}")
         if (intent.action == Actions.ACTION_OPEN_WEATHER_INTENT) {
             try {
                 if (Preferences.weatherAppPackage == IntentHelper.REFRESH_WIDGET_OPTION) {

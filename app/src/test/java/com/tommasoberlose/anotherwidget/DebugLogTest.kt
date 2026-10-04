@@ -24,49 +24,38 @@ class DebugLogTest {
             set(Calendar.MILLISECOND, millis)
         }.timeInMillis
 
-    // --- timestamp: ISO 8601, milliseconds, local offset ---
+    // --- stamp: logcat-shaped wall clock with the local offset ---
 
     @Test
-    fun `timestamps carry milliseconds and the local offset`() {
-        val stamp = DebugLog.timestamp(utc(2026, 10, 4, 15, 30, millis = 384))
+    fun `stamps carry milliseconds and the local offset`() {
+        val stamp = DebugLog.stamp(utc(2026, 10, 5, 0, 30, millis = 742))
         assertTrue(
-            "unexpected format: $stamp",
-            stamp.matches(Regex("""\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}[+-]\d{2}:\d{2}"""))
+            "unexpected stamp: $stamp",
+            stamp.matches(Regex("""\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}[+-]\d{2}:\d{2}"""))
         )
     }
 
-    @Test
-    fun `an utc offset is applied to the wall clock`() {
-        // The formatter runs in the JVM default zone, so the offset itself is checked arithmetically:
-        // the difference between two stamps one hour apart must stay exactly one hour.
-        val first = DebugLog.timestamp(utc(2026, 10, 4, 4, 0))
-        val second = DebugLog.timestamp(utc(2026, 10, 4, 5, 0))
-        assertFalse(first == second)
-        assertEquals(first.length, second.length)
-    }
-
-    // --- the line format ---
+    // --- the logcat-like record format ---
 
     @Test
-    fun `formats category, event and key value fields`() {
+    fun `records look like logcat with tag, pid and thread`() {
         val line = DebugLog.line(
-            utc(2026, 10, 4, 15, 30), "LOCATION", "request_start",
-            listOf("provider" to "network", "timeoutMs" to 15000), emptyList()
+            utc(2026, 10, 5, 0, 30, millis = 742), 'D', "LocationService",
+            "checkSelfPermission ACCESS_FINE_LOCATION=GRANTED", 12345, "main", emptyList()
         )
 
-        assertTrue(line.contains(" [LOCATION] request_start provider=network timeoutMs=15000"))
-        assertTrue(line.matches(Regex("""\d{4}-\d{2}-\d{2}T.* \[LOCATION\] request_start.*""")))
+        assertTrue(
+            line.matches(Regex("""\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}[+-]\d{2}:\d{2} D/LocationService\(12345, main\): checkSelfPermission ACCESS_FINE_LOCATION=GRANTED"""))
+        )
     }
 
     @Test
-    fun `null fields are left out`() {
+    fun `warn and error levels are preserved`() {
         val line = DebugLog.line(
-            utc(2026, 10, 4, 15, 30), "LOCATION", "last_known",
-            listOf("provider" to "network", "result" to null), emptyList()
+            utc(2026, 10, 5, 0, 30), 'W', "QWeatherApi", "request failed type=SocketTimeoutException", 1, "DefaultDispatcher", emptyList()
         )
 
-        assertTrue(line.endsWith("[LOCATION] last_known provider=network"))
-        assertFalse(line.contains("result="))
+        assertTrue(line.contains(" W/QWeatherApi(1, DefaultDispatcher): request failed"))
     }
 
     // --- redaction: credentials must never survive ---
@@ -75,7 +64,7 @@ class DebugLogTest {
     fun `registered secrets are replaced`() {
         val key = "e74c22003b6e4744a95f322a6a84179"
         val line = DebugLog.redact(
-            "request_start host=example.qweatherapi.com key=$key",
+            "request host=example.qweatherapi.com key=$key",
             listOf(key)
         )
 
@@ -101,7 +90,7 @@ class DebugLogTest {
 
     @Test
     fun `ordinary text is not mangled`() {
-        val text = "weather cache hit hours=24 location=guangzhou"
+        val text = "weather cache hit entries=24 location=guangzhou"
         assertEquals(text, DebugLog.redact(text, emptyList()))
     }
 
@@ -109,6 +98,18 @@ class DebugLogTest {
     fun `short values are not treated as secrets`() {
         val text = "provider=network result=30"
         assertEquals(text, DebugLog.redact(text, listOf("network")))
+    }
+
+    // --- flow ids ---
+
+    @Test
+    fun `flow ids are six lowercase hex characters and pairwise distinct`() {
+        val ids = (1..50).map { DebugLog.newFlowId() }
+
+        ids.forEach { id ->
+            assertTrue("unexpected flow id: $id", id.matches(Regex("""[0-9a-f]{6}""")))
+        }
+        assertEquals("flow ids must not repeat", ids.size, ids.toSet().size)
     }
 
     // --- rotation ---

@@ -156,7 +156,7 @@ class ActivityDetectionReceiver : BroadcastReceiver() {
                                 0
                             }
                         }.toLong()
-                        MainWidget.updateWidget(context)
+                        MainWidget.updateWidget(context, "activity_update")
                         setTimeout(context)
                     }
             }
