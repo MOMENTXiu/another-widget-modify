@@ -258,4 +258,14 @@
     <string name="backup_error_unreadable">Súbor sa nepodarilo prečítať.</string>
     <string name="action_cancel">Zrušiť</string>
     <string name="action_restore">Obnoviť</string>
+    <string name="settings_title_debug_mode">Režim ladenia</string>
+    <string name="settings_debug_mode_subtitle">Zapína podrobné diagnostické zaznamenávanie pre polohu, požiadavky na počasie, správanie vyrovnávacej pamäte a aktualizácie widgetu. Záznamy môžu obsahovať súradnice polohy a diagnostické informácie.</string>
+    <string name="debug_export">Exportovať ladiaci záznam</string>
+    <string name="debug_export_subtitle">Uloží diagnostický záznam do súboru</string>
+    <string name="debug_clear">Vymazať ladiace záznamy</string>
+    <string name="debug_clear_subtitle">Odstráni všetky uložené ladiace záznamy</string>
+    <string name="debug_export_success">Ladiaci záznam exportovaný.</string>
+    <string name="debug_export_failed">Ladiaci záznam sa nepodarilo zapísať.</string>
+    <string name="debug_clear_success">Ladiace záznamy boli vymazané.</string>
+    <string name="debug_no_logs">Zatiaľ nie sú žiadne ladiace záznamy.</string>
 </resources>

@@ -86,7 +86,7 @@ object BackupManager {
         val document = linkedMapOf<String, Any>(
             "format" to FORMAT,
             "version" to VERSION,
-            "createdAt" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US).format(Date(now)),
+            "createdAt" to DebugLog.timestamp(now),
             "appVersion" to appVersion,
             "preferences" to preferences
         )
@@ -227,7 +227,7 @@ object BackupManager {
 
         // The schedule and the widget follow the restored configuration.
         WeatherReceiver.setUpdates(context)
-        MainWidget.updateWidget(context)
+        MainWidget.updateWidget(context, "restore")
         EventBus.getDefault().post(MainFragment.UpdateUiMessageEvent())
 
         Log.d(

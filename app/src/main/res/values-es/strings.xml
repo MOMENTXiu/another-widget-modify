@@ -326,4 +326,14 @@
     <string name="backup_error_unreadable">No se pudo leer el archivo.</string>
     <string name="action_cancel">Cancelar</string>
     <string name="action_restore">Restaurar</string>
+    <string name="settings_title_debug_mode">Modo de depuración</string>
+    <string name="settings_debug_mode_subtitle">Activa el registro diagnóstico detallado de la ubicación, las peticiones del clima, el comportamiento de la caché y las actualizaciones del widget. Los registros pueden contener coordenadas de ubicación e información de diagnóstico.</string>
+    <string name="debug_export">Exportar registro de depuración</string>
+    <string name="debug_export_subtitle">Guarda el registro diagnóstico en un archivo</string>
+    <string name="debug_clear">Borrar registros de depuración</string>
+    <string name="debug_clear_subtitle">Elimina todos los registros de depuración guardados</string>
+    <string name="debug_export_success">Registro exportado.</string>
+    <string name="debug_export_failed">No se pudo escribir el registro de depuración.</string>
+    <string name="debug_clear_success">Registros borrados.</string>
+    <string name="debug_no_logs">Todavía no hay registros de depuración.</string>
 </resources>

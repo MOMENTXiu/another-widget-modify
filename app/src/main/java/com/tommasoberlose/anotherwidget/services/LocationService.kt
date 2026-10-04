@@ -17,6 +17,7 @@ import com.chibatching.kotpref.Kotpref
 import com.tommasoberlose.anotherwidget.R
 import com.tommasoberlose.anotherwidget.global.Constants
 import com.tommasoberlose.anotherwidget.global.Preferences
+import com.tommasoberlose.anotherwidget.helpers.DebugLogger
 import com.tommasoberlose.anotherwidget.helpers.LocationHelper
 import com.tommasoberlose.anotherwidget.network.WeatherNetworkApi
 import com.tommasoberlose.anotherwidget.ui.activities.MainActivity
@@ -57,6 +58,11 @@ class LocationService : Service() {
     private suspend fun updateWeather() {
         Kotpref.init(this)
 
+        DebugLogger.log("LOCATION", "flow_start",
+            "trigger" to "weather_refresh",
+            "manual" to (Preferences.customLocationAdd != ""),
+            "cachedAgeMs" to LocationHelper.ageMs())
+
         if (!LocationHelper.isCachedLocationFresh()) {
             acquireLocation()
         }
@@ -69,35 +75,108 @@ class LocationService : Service() {
     }
 
     private suspend fun acquireLocation() {
-        if (!checkGrantedPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
+        val fine = checkGrantedPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+        val coarse = checkGrantedPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+        val background = checkGrantedPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+
+        if (!fine) {
             Log.d(Constants.LOG_TAG, "location refresh skipped: permission denied")
+            DebugLogger.log("LOCATION", "request_failed", "reason" to "permission_denied",
+                "fine" to fine, "coarse" to coarse, "background" to background)
             return
         }
+
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return
 
         // Providers are not all available on every device, so they are checked at runtime.
         val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
             .filter { isProviderEnabled(locationManager, it) }
+
+        // Purely diagnostic: what the system offers on this device, including the providers this
+        // app deliberately does not use.
+        locationManager.allProviders.forEach { provider ->
+            DebugLogger.log("LOCATION", "provider_state",
+                "provider" to provider,
+                "available" to true,
+                "enabled" to isProviderEnabled(locationManager, provider))
+        }
+        DebugLogger.log("LOCATION", "permission",
+            "fine" to fine, "coarse" to coarse, "background" to background)
+
         if (providers.isEmpty()) {
             Log.d(Constants.LOG_TAG, "location refresh skipped: no provider enabled")
+            DebugLogger.log("LOCATION", "request_failed", "reason" to "provider_disabled",
+                "providers" to locationManager.allProviders.joinToString())
             return
         }
 
+        logLastKnownCandidates(locationManager)
+
         Log.d(Constants.LOG_TAG, "location refresh attempted on ${providers.joinToString()}")
+        DebugLogger.log("LOCATION", "request_start",
+            "provider" to providers.joinToString("+"),
+            "timeoutMs" to Constants.LOCATION_ACQUISITION_TIMEOUT)
+
+        val startedAt = System.currentTimeMillis()
         val fix = withTimeoutOrNull(Constants.LOCATION_ACQUISITION_TIMEOUT) { awaitSingleUpdate(locationManager, providers) }
+
         if (fix != null) {
             Log.d(Constants.LOG_TAG, "location refresh succeeded")
+            DebugLogger.log("LOCATION", "result",
+                "provider" to fix.provider,
+                "lat" to fix.latitude,
+                "lon" to fix.longitude,
+                "accuracy" to fix.accuracy,
+                "locationTime" to fix.time,
+                "ageMs" to (System.currentTimeMillis() - fix.time),
+                "durationMs" to (System.currentTimeMillis() - startedAt))
+
             LocationHelper.saveLocation(fix.latitude, fix.longitude, fix.time)
+            DebugLogger.log("LOCATION", "selected", "source" to "fresh_fix", "provider" to fix.provider,
+                "accuracy" to fix.accuracy)
             return
         }
+
         Log.d(Constants.LOG_TAG, "location refresh failed, falling back to the stored coordinates")
+        DebugLogger.log("LOCATION", "request_failed", "reason" to "timeout",
+            "timeoutMs" to Constants.LOCATION_ACQUISITION_TIMEOUT)
 
         // Timed out: reuse the best last known position, but only if it is newer than the cache.
         val lastKnown = providers
             .mapNotNull { lastKnownLocation(locationManager, it) }
             .maxByOrNull { it.time }
+
         if (lastKnown != null && lastKnown.time > Preferences.lastLocationTimestamp) {
+            DebugLogger.log("LOCATION", "fallback",
+                "from" to providers.joinToString("+"),
+                "to" to lastKnown.provider,
+                "reason" to "timeout")
             LocationHelper.saveLocation(lastKnown.latitude, lastKnown.longitude, lastKnown.time)
+            DebugLogger.log("LOCATION", "selected", "source" to "last_known", "provider" to lastKnown.provider,
+                "accuracy" to lastKnown.accuracy, "ageMs" to (System.currentTimeMillis() - lastKnown.time))
+        } else {
+            DebugLogger.log("LOCATION", "selected", "source" to "stale_cache",
+                "cachedAgeMs" to LocationHelper.ageMs())
+        }
+    }
+
+    /** Diagnostics only: what the system remembers for each provider, used or not. */
+    private fun logLastKnownCandidates(locationManager: LocationManager) {
+        listOf(
+            LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER,
+            "fused", LocationManager.PASSIVE_PROVIDER
+        ).forEach { provider ->
+            val fix = lastKnownLocation(locationManager, provider)
+            if (fix == null) {
+                DebugLogger.log("LOCATION", "last_known", "provider" to provider, "result" to null)
+            } else {
+                DebugLogger.log("LOCATION", "last_known",
+                    "provider" to provider,
+                    "accuracy" to fix.accuracy,
+                    "ageMs" to (System.currentTimeMillis() - fix.time),
+                    "lat" to fix.latitude,
+                    "lon" to fix.longitude)
+            }
         }
     }
 

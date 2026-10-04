@@ -7,11 +7,13 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Typeface
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.viewbinding.ViewBinding
 import com.tommasoberlose.anotherwidget.global.Constants
 import com.tommasoberlose.anotherwidget.global.Preferences
 import com.tommasoberlose.anotherwidget.helpers.*
 import com.tommasoberlose.anotherwidget.receivers.*
+import com.tommasoberlose.anotherwidget.helpers.DebugLog
 import com.tommasoberlose.anotherwidget.utils.toPixel
 import java.lang.Exception
 import kotlin.math.min
@@ -51,7 +53,8 @@ class MainWidget : AppWidgetProvider() {
 
     companion object {
 
-        fun updateWidget(context: Context) {
+        fun updateWidget(context: Context, reason: String = "unspecified") {
+            DebugLogger.log("WIDGET", "update_start", "reason" to reason)
             context.sendBroadcast(IntentHelper.getWidgetUpdateIntent(context))
         }
 
@@ -63,6 +66,16 @@ class MainWidget : AppWidgetProvider() {
 
         internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager,
                                      appWidgetId: Int) {
+            val renderStartedAt = SystemClock.elapsedRealtime()
+
+            DebugLogger.log("WIDGET", "render", "appWidgetId" to appWidgetId,
+                "weatherAvailable" to (Preferences.showWeather && Preferences.weatherIcon != ""),
+                "condition" to Preferences.weatherIcon,
+                "temperature" to Preferences.weatherTemp,
+                "unit" to Preferences.weatherRealTempUnit,
+                "forecastTime" to (Preferences.weatherForecastTime.takeIf { it > 0 }
+                    ?.let { DebugLog.timestamp(it) }))
+
             val displayMetrics = Resources.getSystem().displayMetrics
             val width = displayMetrics.widthPixels
             val height = displayMetrics.heightPixels
@@ -77,7 +90,11 @@ class MainWidget : AppWidgetProvider() {
                 }
                 try {
                     if (views != null) appWidgetManager.updateAppWidget(appWidgetId, views)
+                    DebugLogger.log("WIDGET", "update_complete", "appWidgetId" to appWidgetId,
+                        "durationMs" to (SystemClock.elapsedRealtime() - renderStartedAt))
                 } catch (ex: Exception) {
+                    DebugLogger.log("WIDGET", "update_failed", "appWidgetId" to appWidgetId,
+                        "exception" to ex.javaClass.simpleName)
                     ex.printStackTrace()
                 }
             }

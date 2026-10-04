@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import com.haroldadmin.cnradapter.NetworkResponseAdapterFactory
 import com.tommasoberlose.anotherwidget.global.Preferences
+import com.tommasoberlose.anotherwidget.helpers.DebugLogger
 import com.tommasoberlose.anotherwidget.network.api.ApiServices
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -20,7 +21,10 @@ object QWeatherAuth {
     // "abcdefg.re.qweatherapi.com") that has to be pasted in the settings.
     const val DEFAULT_API_HOST = "devapi.qweather.com"
 
-    fun apiKey(): String = Preferences.weatherProviderApiQWeather.trim()
+    fun apiKey(): String = Preferences.weatherProviderApiQWeather.trim().also {
+        // Defensive: if the key ever reaches a log line it comes out as *** instead.
+        DebugLogger.rememberSecret(it)
+    }
 
     fun isConfigured(): Boolean = apiKey() != ""
 

@@ -10,6 +10,8 @@ import com.tommasoberlose.anotherwidget.global.Constants
 import com.tommasoberlose.anotherwidget.global.Preferences
 import com.tommasoberlose.anotherwidget.helpers.CachedWeatherForecast
 import com.tommasoberlose.anotherwidget.helpers.CachedWeatherHour
+import com.tommasoberlose.anotherwidget.helpers.DebugLog
+import com.tommasoberlose.anotherwidget.helpers.DebugLogger
 import com.tommasoberlose.anotherwidget.helpers.WeatherCache
 import com.tommasoberlose.anotherwidget.helpers.WeatherHelper
 import com.tommasoberlose.anotherwidget.network.repository.QWeatherAuth
@@ -20,6 +22,7 @@ import java.io.IOException
 import org.greenrobot.eventbus.EventBus
 import java.io.EOFException
 import java.net.SocketTimeoutException
+import javax.net.ssl.SSLException
 import java.net.UnknownHostException
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -84,18 +87,35 @@ class WeatherNetworkApi(val context: Context) {
                 if (refreshed != null) {
                     WeatherCache.save(refreshed)
                     forecast = refreshed
+                    DebugLogger.log("WEATHER_CACHE", "refresh_success", "hours" to refreshed.hours.size,
+                        "lat" to refreshed.latitude, "lon" to refreshed.longitude)
                 } else {
                     Log.d(Constants.LOG_TAG, "QWeather refresh failed, keeping the cached forecast")
+                    DebugLogger.log("WEATHER_CACHE", "refresh_failed_keep_old",
+                        "kept" to (forecast != null),
+                        "cacheAgeMs" to (forecast?.let { WeatherCache.ageOf(it) } ?: 0L))
                 }
             } else {
                 Log.d(Constants.LOG_TAG, "weather cache hit, no network request")
             }
 
-            val hour = forecast?.let { WeatherCache.selectHour(it) }
-            if (hour == null) {
-                Log.d(Constants.LOG_TAG, "no cached hour close enough to now, leaving the weather as it is")
-            } else {
-                display(hour)
+            forecast?.let { cached ->
+                val hour = WeatherCache.selectHour(cached)
+
+                if (hour == null) {
+                    Log.d(Constants.LOG_TAG, "no cached hour close enough to now, leaving the weather as it is")
+                    DebugLogger.log("WEATHER", "hourly_select", "result" to "none",
+                        "cacheAgeMs" to WeatherCache.ageOf(cached), "hours" to cached.hours.size)
+                } else {
+                    DebugLogger.log("WEATHER", "hourly_select",
+                        "now" to DebugLog.timestamp(System.currentTimeMillis()),
+                        "selectedForecastTime" to DebugLog.timestamp(hour.forecastTime),
+                        "index" to cached.hours.indexOf(hour),
+                        "conditionCode" to hour.code,
+                        "temperature" to hour.temperatureC,
+                        "cacheAgeMs" to WeatherCache.ageOf(cached))
+                    display(hour)
+                }
             }
         } catch (ex: Exception) {
             // A malformed response or an unreachable API host must never take the app down.
@@ -174,23 +194,64 @@ class WeatherNetworkApi(val context: Context) {
             ?.get("text") as? String
 
     private fun needsRefresh(forecast: CachedWeatherForecast?, latitude: Double, longitude: Double): Boolean {
-        if (forecast == null) return true
+        if (forecast == null) {
+            DebugLogger.log("WEATHER_CACHE", "miss", "currentLat" to latitude, "currentLon" to longitude)
+            return true
+        }
 
-        if (!WeatherCache.isSamePlace(forecast, latitude, longitude)) {
-            Log.d(Constants.LOG_TAG, "weather cache invalidated: the location changed")
+        val distance = WeatherCache.distanceTo(forecast, latitude, longitude)
+        if (distance > Constants.WEATHER_LOCATION_CHANGE_THRESHOLD) {
+            DebugLogger.log("LOCATION", "movement",
+                "oldLat" to forecast.latitude,
+                "oldLon" to forecast.longitude,
+                "newLat" to latitude,
+                "newLon" to longitude,
+                "distanceMeters" to distance.toInt(),
+                "thresholdMeters" to Constants.WEATHER_LOCATION_CHANGE_THRESHOLD.toInt(),
+                "weatherCacheInvalidated" to true)
             return true
         }
 
         if (!WeatherCache.isFresh(forecast)) {
-            Log.d(Constants.LOG_TAG, "weather cache expired (network TTL)")
+            DebugLogger.log("WEATHER_CACHE", "stale",
+                "cacheAgeMs" to WeatherCache.ageOf(forecast),
+                "ttlMs" to Constants.WEATHER_CACHE_TTL,
+                "cachedLat" to forecast.latitude,
+                "cachedLon" to forecast.longitude,
+                "currentLat" to latitude,
+                "currentLon" to longitude)
             return true
         }
 
         // Fresh, but it may already have run out of hours to display.
-        return WeatherCache.selectHour(forecast) == null
+        if (WeatherCache.selectHour(forecast) == null) {
+            DebugLogger.log("WEATHER_CACHE", "refresh_required", "reason" to "no_usable_hour",
+                "cacheAgeMs" to WeatherCache.ageOf(forecast))
+            return true
+        }
+
+        DebugLogger.log("WEATHER_CACHE", "hit",
+            "cacheAgeMs" to WeatherCache.ageOf(forecast),
+            "ttlMs" to Constants.WEATHER_CACHE_TTL,
+            "cachedLat" to forecast.latitude,
+            "cachedLon" to forecast.longitude,
+            "currentLat" to latitude,
+            "currentLon" to longitude,
+            "hours" to forecast.hours.size)
+        return false
     }
 
     private suspend fun requestForecast(latitude: Double, longitude: Double): CachedWeatherForecast? {
+        val startedAt = System.currentTimeMillis()
+
+        DebugLogger.log("WEATHER_API", "request_start",
+            "endpoint" to "hourly",
+            "host" to QWeatherAuth.baseUrl(),
+            "lat" to latitude,
+            "lon" to longitude,
+            "hours" to 24,
+            "localTime" to true)
+
         return try {
             when (val response = QWeatherRepository(context).getWeather(latitude, longitude)) {
                 is NetworkResponse.Success -> {
@@ -198,11 +259,19 @@ class WeatherNetworkApi(val context: Context) {
 
                     if (hours.isEmpty()) {
                         Log.w(Constants.LOG_TAG, "QWeather response held no usable hourly entry")
+                        DebugLogger.log("WEATHER_API", "response", "status" to response.code,
+                            "durationMs" to (System.currentTimeMillis() - startedAt), "success" to false,
+                            "reason" to "no_usable_hour")
                         Preferences.weatherProviderError = context.getString(R.string.weather_provider_error_generic)
                         Preferences.weatherProviderLocationError = ""
                         null
                     } else {
                         Log.d(Constants.LOG_TAG, "QWeather refresh succeeded, ${hours.size} hours cached")
+                        DebugLogger.log("WEATHER_API", "response", "status" to response.code,
+                            "durationMs" to (System.currentTimeMillis() - startedAt), "success" to true,
+                            "hourCount" to hours.size,
+                            "firstForecastTime" to DebugLog.timestamp(hours.first().forecastTime),
+                            "lastForecastTime" to DebugLog.timestamp(hours.last().forecastTime))
                         Preferences.weatherProviderError = ""
                         Preferences.weatherProviderLocationError = ""
                         CachedWeatherForecast(System.currentTimeMillis(), latitude, longitude, hours)
@@ -210,12 +279,19 @@ class WeatherNetworkApi(val context: Context) {
                 }
                 is NetworkResponse.ServerError -> {
                     Log.d(Constants.LOG_TAG, "QWeather refresh rejected with HTTP ${response.code}")
+                    DebugLogger.log("WEATHER_API", "request_failed", "reason" to "http_status",
+                        "status" to response.code,
+                        "durationMs" to (System.currentTimeMillis() - startedAt))
                     Preferences.weatherProviderError = qWeatherErrorMessage(response.code, response.body)
                     Preferences.weatherProviderLocationError = ""
                     null
                 }
                 is NetworkResponse.NetworkError -> {
                     Log.d(Constants.LOG_TAG, "QWeather refresh failed: ${response.error.javaClass.simpleName}: ${response.error.message}")
+                    DebugLogger.log("WEATHER_API", "request_failed",
+                        "reason" to networkFailureReason(response.error),
+                        "exception" to response.error.javaClass.simpleName,
+                        "durationMs" to (System.currentTimeMillis() - startedAt))
                     Preferences.weatherProviderError = connectionErrorMessage(response.error)
                     Preferences.weatherProviderLocationError = ""
                     null
@@ -223,6 +299,10 @@ class WeatherNetworkApi(val context: Context) {
                 else -> {
                     val cause = (response as? NetworkResponse.UnknownError)?.error
                     Log.w(Constants.LOG_TAG, "QWeather refresh failed unexpectedly: ${cause?.javaClass?.simpleName}: ${cause?.message}")
+                    DebugLogger.log("WEATHER_API", "request_failed",
+                        "reason" to if (cause is EOFException) "parse" else "exception",
+                        "exception" to (cause?.javaClass?.simpleName ?: "unknown"),
+                        "durationMs" to (System.currentTimeMillis() - startedAt))
                     Preferences.weatherProviderError = unexpectedErrorMessage(cause)
                     Preferences.weatherProviderLocationError = ""
                     null
@@ -261,6 +341,7 @@ class WeatherNetworkApi(val context: Context) {
         // The cache holds Celsius; the user preference decides what is displayed.
         val celsius = hour.temperatureC.toFloat()
 
+        Preferences.weatherForecastTime = hour.forecastTime
         Preferences.weatherTemp = if (Preferences.weatherTempUnit == "F") celsius * 9f / 5f + 32f else celsius
         Preferences.weatherIcon = WeatherHelper.getQWeatherIcon(hour.code, isDaytimeNow())
         Preferences.weatherRealTempUnit = Preferences.weatherTempUnit
@@ -268,7 +349,7 @@ class WeatherNetworkApi(val context: Context) {
         Preferences.weatherProviderLocationError = ""
 
         Log.d(Constants.LOG_TAG, "displaying ${SimpleDateFormat("MM-dd HH:mm", Locale.US).format(Date(hour.forecastTime))} code=${hour.code} temp=${hour.temperatureC}C")
-        MainWidget.updateWidget(context)
+        MainWidget.updateWidget(context, "weather_refresh")
     }
 
     private fun describeCache(forecast: CachedWeatherForecast?): String {
@@ -294,6 +375,13 @@ class WeatherNetworkApi(val context: Context) {
         } else {
             context.getString(R.string.weather_provider_error_generic)
         }
+
+    private fun networkFailureReason(error: IOException): String = when (error) {
+        is UnknownHostException -> "dns"
+        is SocketTimeoutException -> "timeout"
+        is SSLException -> "tls"
+        else -> "io"
+    }
 
     private fun isDaytimeNow(): Boolean = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 6..18
 

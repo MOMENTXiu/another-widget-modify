@@ -317,4 +317,14 @@
     <string name="backup_error_unreadable">Impossibile leggere il file.</string>
     <string name="action_cancel">Annulla</string>
     <string name="action_restore">Ripristina</string>
+    <string name="settings_title_debug_mode">Modalità debug</string>
+    <string name="settings_debug_mode_subtitle">Attiva la registrazione diagnostica dettagliata per posizione, richieste meteo, comportamento della cache e aggiornamenti del widget. I log possono contenere coordinate della posizione e informazioni diagnostiche.</string>
+    <string name="debug_export">Esporta log di debug</string>
+    <string name="debug_export_subtitle">Salva il log diagnostico in un file</string>
+    <string name="debug_clear">Cancella i log di debug</string>
+    <string name="debug_clear_subtitle">Elimina tutti i log di debug salvati</string>
+    <string name="debug_export_success">Log di debug esportato.</string>
+    <string name="debug_export_failed">Impossibile scrivere il log di debug.</string>
+    <string name="debug_clear_success">Log di debug cancellati.</string>
+    <string name="debug_no_logs">Non ci sono ancora log di debug.</string>
 </resources>

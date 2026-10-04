@@ -350,4 +350,14 @@
     <string name="backup_error_unreadable">Die Datei konnte nicht gelesen werden.</string>
     <string name="action_cancel">Abbrechen</string>
     <string name="action_restore">Wiederherstellen</string>
+    <string name="settings_title_debug_mode">Debug-Modus</string>
+    <string name="settings_debug_mode_subtitle">Aktiviert die ausführliche diagnostische Protokollierung für Standort, Wetteranfragen, Cache-Verhalten und Widget-Aktualisierungen. Debug-Protokolle können Standortkoordinaten und Diagnoseinformationen enthalten.</string>
+    <string name="debug_export">Debug-Protokoll exportieren</string>
+    <string name="debug_export_subtitle">Das Diagnoseprotokoll in einer Datei speichern</string>
+    <string name="debug_clear">Debug-Protokolle löschen</string>
+    <string name="debug_clear_subtitle">Alle gespeicherten Debug-Protokolle löschen</string>
+    <string name="debug_export_success">Debug-Protokoll exportiert.</string>
+    <string name="debug_export_failed">Das Debug-Protokoll konnte nicht geschrieben werden.</string>
+    <string name="debug_clear_success">Debug-Protokolle gelöscht.</string>
+    <string name="debug_no_logs">Es gibt noch keine Debug-Protokolle.</string>
 </resources>

@@ -364,4 +364,14 @@
     <string name="backup_error_unreadable">无法读取这个文件。</string>
     <string name="action_cancel">取消</string>
     <string name="action_restore">恢复</string>
+    <string name="settings_title_debug_mode">调试模式</string>
+    <string name="settings_debug_mode_subtitle">开启后会对定位、天气请求、缓存行为和组件更新记录详细的诊断日志。调试日志可能包含位置坐标和诊断信息。</string>
+    <string name="debug_export">导出调试日志</string>
+    <string name="debug_export_subtitle">把诊断日志保存成文件</string>
+    <string name="debug_clear">清除调试日志</string>
+    <string name="debug_clear_subtitle">删除所有已保存的调试日志文件</string>
+    <string name="debug_export_success">调试日志已导出。</string>
+    <string name="debug_export_failed">无法写入调试日志文件。</string>
+    <string name="debug_clear_success">调试日志已清除。</string>
+    <string name="debug_no_logs">还没有调试日志。</string>
 </resources>

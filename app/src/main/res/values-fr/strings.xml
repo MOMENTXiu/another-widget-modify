@@ -384,4 +384,14 @@
     <string name="backup_error_unreadable">Impossible de lire ce fichier.</string>
     <string name="action_cancel">Annuler</string>
     <string name="action_restore">Restaurer</string>
+    <string name="settings_title_debug_mode">Mode debug</string>
+    <string name="settings_debug_mode_subtitle">Active la journalisation de diagnostic détaillée pour la localisation, les requêtes météo, le comportement du cache et les mises à jour du widget. Les journaux peuvent contenir des coordonnées de localisation et des informations de diagnostic.</string>
+    <string name="debug_export">Exporter le journal de debug</string>
+    <string name="debug_export_subtitle">Enregistre le journal de diagnostic dans un fichier</string>
+    <string name="debug_clear">Effacer les journaux de debug</string>
+    <string name="debug_clear_subtitle">Supprime tous les journaux de debug enregistrés</string>
+    <string name="debug_export_success">Journal de debug exporté.</string>
+    <string name="debug_export_failed">Impossible d\'écrire le journal de debug.</string>
+    <string name="debug_clear_success">Journaux de debug effacés.</string>
+    <string name="debug_no_logs">Aucun journal de debug pour le moment.</string>
 </resources>

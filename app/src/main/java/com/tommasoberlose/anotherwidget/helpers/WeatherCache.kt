@@ -59,12 +59,16 @@ object WeatherCache {
     /** Within the network TTL the cached sequence is reused as is. */
     fun isFresh(forecast: CachedWeatherForecast): Boolean = ageOf(forecast) < Constants.WEATHER_CACHE_TTL
 
-    /** A forecast fetched somewhere else is useless, even if it is recent. */
-    fun isSamePlace(forecast: CachedWeatherForecast, latitude: Double, longitude: Double): Boolean {
+    /** metres between where the forecast was fetched and the given position. */
+    fun distanceTo(forecast: CachedWeatherForecast, latitude: Double, longitude: Double): Float {
         val distance = FloatArray(1)
         Location.distanceBetween(forecast.latitude, forecast.longitude, latitude, longitude, distance)
-        return distance[0] <= Constants.WEATHER_LOCATION_CHANGE_THRESHOLD
+        return distance[0]
     }
+
+    /** A forecast fetched somewhere else is useless, even if it is recent. */
+    fun isSamePlace(forecast: CachedWeatherForecast, latitude: Double, longitude: Double): Boolean =
+        distanceTo(forecast, latitude, longitude) <= Constants.WEATHER_LOCATION_CHANGE_THRESHOLD
 
     /**
      * The hour to display: the latest entry that has already started, so the widget follows the

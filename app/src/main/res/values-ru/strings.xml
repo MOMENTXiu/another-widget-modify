@@ -241,4 +241,14 @@
     <string name="backup_error_unreadable">Не удалось прочитать файл.</string>
     <string name="action_cancel">Отмена</string>
     <string name="action_restore">Восстановить</string>
+    <string name="settings_title_debug_mode">Режим отладки</string>
+    <string name="settings_debug_mode_subtitle">Включает подробное диагностическое журналирование для местоположения, запросов погоды, работы кеша и обновлений виджета. Журналы могут содержать координаты местоположения и диагностическую информацию.</string>
+    <string name="debug_export">Экспортировать журнал отладки</string>
+    <string name="debug_export_subtitle">Сохранить диагностический журнал в файл</string>
+    <string name="debug_clear">Очистить журналы отладки</string>
+    <string name="debug_clear_subtitle">Удалить все сохранённые журналы отладки</string>
+    <string name="debug_export_success">Журнал отладки экспортирован.</string>
+    <string name="debug_export_failed">Не удалось записать журнал отладки.</string>
+    <string name="debug_clear_success">Журналы отладки очищены.</string>
+    <string name="debug_no_logs">Журналов отладки пока нет.</string>
 </resources>

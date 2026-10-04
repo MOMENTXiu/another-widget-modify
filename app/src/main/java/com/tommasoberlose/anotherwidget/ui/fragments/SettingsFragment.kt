@@ -1,12 +1,14 @@
 package com.tommasoberlose.anotherwidget.ui.fragments
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
@@ -28,6 +30,7 @@ import com.tommasoberlose.anotherwidget.databinding.FragmentAppSettingsBinding
 import com.tommasoberlose.anotherwidget.global.Preferences
 import com.tommasoberlose.anotherwidget.helpers.ActiveNotificationsHelper
 import com.tommasoberlose.anotherwidget.helpers.CalendarHelper
+import com.tommasoberlose.anotherwidget.helpers.DebugLogger
 import com.tommasoberlose.anotherwidget.helpers.MediaPlayerHelper
 import com.tommasoberlose.anotherwidget.helpers.WeatherHelper
 import com.tommasoberlose.anotherwidget.ui.activities.settings.BackupRestoreActivity
@@ -48,6 +51,7 @@ class SettingsFragment : Fragment() {
 
     companion object {
         fun newInstance() = SettingsFragment()
+        private const val REQUEST_DEBUG_LOG = 71
     }
 
     private lateinit var viewModel: MainViewModel
@@ -163,6 +167,23 @@ class SettingsFragment : Fragment() {
             startActivity(Intent(requireContext(), BackupRestoreActivity::class.java))
         }
 
+        binding.debugModeToggle.isChecked = Preferences.debugMode == 1
+
+        binding.actionDebugMode.setOnClickListener {
+            binding.debugModeToggle.isChecked = !binding.debugModeToggle.isChecked
+        }
+
+        binding.debugModeToggle.setOnCheckedChangeListener { _, isChecked ->
+            Preferences.debugMode = if (isChecked) 1 else 0
+        }
+
+        binding.actionDebugExport.setOnClickListener { exportDebugLog() }
+
+        binding.actionDebugClear.setOnClickListener {
+            DebugLogger.clear(requireContext())
+            Toast.makeText(requireContext(), getString(R.string.debug_clear_success), Toast.LENGTH_SHORT).show()
+        }
+
         binding.actionChangeTheme.setOnClickListener {
             maintainScrollPosition {
                 BottomSheetMenu<Int>(requireContext(),
@@ -235,9 +256,50 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != REQUEST_DEBUG_LOG || resultCode != Activity.RESULT_OK) return
+
+        data?.data?.let { uri ->
+            val text = DebugLogger.exportText(requireContext())
+            val written = if (text == null) false else try {
+                requireContext().contentResolver.openOutputStream(uri, "wt")?.use { stream ->
+                    stream.write(text.toByteArray(Charsets.UTF_8))
+                    stream.flush()
+                } != null
+            } catch (ex: Exception) {
+                false
+            }
+
+            Toast.makeText(
+                requireContext(),
+                getString(if (written) R.string.debug_export_success else R.string.debug_export_failed),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         binding.showWallpaperToggle.setCheckedNoEvent(Preferences.showWallpaper && requireActivity().checkGrantedPermission(Manifest.permission.READ_EXTERNAL_STORAGE))
+    }
+
+    private fun exportDebugLog() {
+        DebugLogger.flush()
+
+        if (DebugLogger.exportText(requireContext()) == null) {
+            Toast.makeText(requireContext(), getString(R.string.debug_no_logs), Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        startActivityForResult(
+            Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TITLE, DebugLogger.suggestedFileName())
+            },
+            REQUEST_DEBUG_LOG
+        )
     }
 
     private fun requirePermission() {

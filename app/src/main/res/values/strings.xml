@@ -332,6 +332,16 @@
     <string name="donation_lunch">A quick lunch</string>
     <string name="action_show_widget_preview">Show widget preview</string>
     <string name="support_dev_subtitle">This is a single developer project,\nso thank you for the support!</string>
+    <string name="settings_title_debug_mode">Debug Mode</string>
+    <string name="settings_debug_mode_subtitle">Enable detailed diagnostic logging for location, weather requests, cache behaviour and widget updates. Debug logs may contain location coordinates and diagnostic information.</string>
+    <string name="debug_export">Export debug log</string>
+    <string name="debug_export_subtitle">Save the diagnostic log to a file</string>
+    <string name="debug_clear">Clear debug logs</string>
+    <string name="debug_clear_subtitle">Delete all stored debug log files</string>
+    <string name="debug_export_success">Debug log exported.</string>
+    <string name="debug_export_failed">Could not write the debug log.</string>
+    <string name="debug_clear_success">Debug logs cleared.</string>
+    <string name="debug_no_logs">There are no debug logs yet.</string>
     <string name="settings_title_backup_restore">Backup &amp; Restore</string>
     <string name="settings_backup_restore_subtitle">Export or import your configuration</string>
     <string name="backup_activity_subtitle">Backups are plain JSON files, saved wherever you choose. Weather caches, the location cache and the API key are never included.</string>

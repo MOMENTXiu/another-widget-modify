@@ -18,11 +18,15 @@ object LocationHelper {
     fun isCachedLocationFresh(): Boolean =
         hasCachedLocation() && System.currentTimeMillis() - Preferences.lastLocationTimestamp <= Constants.LOCATION_CACHE_TTL
 
+    /** How old the stored fix is, in milliseconds; 0 when there is none. */
+    fun ageMs(): Long =
+        if (!hasCachedLocation()) 0L else System.currentTimeMillis() - Preferences.lastLocationTimestamp
+
     /** For the logs: how old the stored fix is, without leaking coordinates. */
     fun describeAge(): String {
         if (!hasCachedLocation()) return "no cached location"
 
-        val minutes = (System.currentTimeMillis() - Preferences.lastLocationTimestamp) / 60_000
+        val minutes = ageMs() / 60_000
         return "age=${minutes}m"
     }
 

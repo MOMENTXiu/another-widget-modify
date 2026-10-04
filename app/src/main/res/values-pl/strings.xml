@@ -363,4 +363,14 @@
     <string name="backup_error_unreadable">Nie udało się odczytać pliku.</string>
     <string name="action_cancel">Anuluj</string>
     <string name="action_restore">Przywróć</string>
+    <string name="settings_title_debug_mode">Tryb debugowania</string>
+    <string name="settings_debug_mode_subtitle">Włącza szczegółowe rejestrowanie diagnostyczne dla lokalizacji, zapytań pogodowych, zachowania pamięci podręcznej i aktualizacji widżetu. Logi mogą zawierać współrzędne lokalizacji i informacje diagnostyczne.</string>
+    <string name="debug_export">Eksportuj log diagnostyczny</string>
+    <string name="debug_export_subtitle">Zapisz log diagnostyczny do pliku</string>
+    <string name="debug_clear">Wyczyść logi diagnostyczne</string>
+    <string name="debug_clear_subtitle">Usuń wszystkie zapisane logi diagnostyczne</string>
+    <string name="debug_export_success">Log diagnostyczny wyeksportowany.</string>
+    <string name="debug_export_failed">Nie udało się zapisać logu diagnostycznego.</string>
+    <string name="debug_clear_success">Logi diagnostyczne wyczyszczone.</string>
+    <string name="debug_no_logs">Nie ma jeszcze logów diagnostycznych.</string>
 </resources>

@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import com.chibatching.kotpref.Kotpref
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tommasoberlose.anotherwidget.global.Preferences
+import com.tommasoberlose.anotherwidget.helpers.DebugLogger
 import com.tommasoberlose.anotherwidget.utils.checkGrantedPermission
 import io.realm.Realm
 import io.realm.RealmConfiguration
@@ -21,6 +22,9 @@ class AWApplication : Application() {
 
         // Preferences
         Kotpref.init(this)
+
+        // Diagnostic logging (off unless the user enables Debug Mode)
+        DebugLogger.init(this)
 
         // Dark theme
         AppCompatDelegate.setDefaultNightMode(Preferences.darkThemePreference)

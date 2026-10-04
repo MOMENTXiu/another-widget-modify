@@ -247,4 +247,14 @@
     <string name="backup_error_unreadable">File ini tidak dapat dibaca.</string>
     <string name="action_cancel">Batal</string>
     <string name="action_restore">Pulihkan</string>
+    <string name="settings_title_debug_mode">Mode debug</string>
+    <string name="settings_debug_mode_subtitle">Mengaktifkan pencatatan diagnostik terperinci untuk lokasi, permintaan cuaca, perilaku cache, dan pembaruan widget. Log debug dapat berisi koordinat lokasi dan informasi diagnostik.</string>
+    <string name="debug_export">Ekspor log debug</string>
+    <string name="debug_export_subtitle">Simpan log diagnostik ke file</string>
+    <string name="debug_clear">Hapus log debug</string>
+    <string name="debug_clear_subtitle">Hapus semua log debug yang tersimpan</string>
+    <string name="debug_export_success">Log debug diekspor.</string>
+    <string name="debug_export_failed">Tidak dapat menulis log debug.</string>
+    <string name="debug_clear_success">Log debug dihapus.</string>
+    <string name="debug_no_logs">Belum ada log debug.</string>
 </resources>

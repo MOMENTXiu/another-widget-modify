@@ -380,4 +380,14 @@
     <string name="backup_error_unreadable">Filen kunne ikke læses.</string>
     <string name="action_cancel">Annuller</string>
     <string name="action_restore">Gendan</string>
+    <string name="settings_title_debug_mode">Fejlfindingstilstand</string>
+    <string name="settings_debug_mode_subtitle">Aktiver detaljeret diagnosticeringslogning for placering, vejrforespørgsler, cache-adfærd og widget-opdateringer. Fejlfindingslogge kan indeholde placeringskoordinater og diagnostiske oplysninger.</string>
+    <string name="debug_export">Eksportér fejlfindingslog</string>
+    <string name="debug_export_subtitle">Gem den diagnostiske log i en fil</string>
+    <string name="debug_clear">Ryd fejlfindingslogge</string>
+    <string name="debug_clear_subtitle">Slet alle gemte fejlfindingslogge</string>
+    <string name="debug_export_success">Fejlfindingslog eksporteret.</string>
+    <string name="debug_export_failed">Kunne ikke skrive fejlfindingsloggen.</string>
+    <string name="debug_clear_success">Fejlfindingslogge ryddet.</string>
+    <string name="debug_no_logs">Der er endnu ingen fejlfindingslogge.</string>
 </resources>
