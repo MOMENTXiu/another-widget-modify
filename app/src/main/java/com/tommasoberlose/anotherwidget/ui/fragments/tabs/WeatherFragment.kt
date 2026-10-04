@@ -166,7 +166,7 @@ class WeatherFragment : Fragment() {
             BottomSheetQWeatherSettings(requireContext()) {
                 updateQWeatherSettingsLabel()
                 viewLifecycleOwner.lifecycleScope.launch {
-                    WeatherHelper.updateWeather(requireContext(), trigger = "manual_refresh")
+                    WeatherHelper.refreshWeatherData(requireContext(), trigger = "manual_refresh")
                 }
             }.show()
         }
@@ -187,7 +187,7 @@ class WeatherFragment : Fragment() {
                     if (value != Preferences.weatherTempUnit) {
                         DebugLogger.d("WeatherSettings", "temperature unit changed to=$value")
                         viewLifecycleOwner.lifecycleScope.launch {
-                            WeatherHelper.updateWeather(requireContext(), trigger = "manual_refresh")
+                            WeatherHelper.refreshWeatherData(requireContext(), trigger = "manual_refresh")
                         }
                     }
                     Preferences.weatherTempUnit = value

@@ -48,6 +48,13 @@ object Preferences : KotprefModel() {
     var debugMode by intPref(key = "PREF_DEBUG_MODE", default = 0)
     var weatherForecastCache by stringPref(key = "PREF_WEATHER_FORECAST_CACHE", default = "")
     var weatherForecastTime by longPref(key = "PREF_WEATHER_FORECAST_TIME", default = 0L)
+
+    // The stable QWeather region (GeoAPI location id) the current weather belongs to, plus the
+    // coordinates of the last fix confirmed inside it. Stable identity, never display strings.
+    var weatherRegionId by stringPref(key = "PREF_WEATHER_REGION_ID", default = "")
+    var weatherRegionName by stringPref(key = "PREF_WEATHER_REGION_NAME", default = "")
+    var weatherRegionLat by stringPref(key = "PREF_WEATHER_REGION_LAT", default = "")
+    var weatherRegionLon by stringPref(key = "PREF_WEATHER_REGION_LON", default = "")
     var weatherProviderError by stringPref(default = "")
     var weatherProviderLocationError by stringPref(default = "")
     var eventAppName by stringPref(key = "PREF_EVENT_APP_NAME", default = "")

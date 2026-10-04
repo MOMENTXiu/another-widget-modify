@@ -35,7 +35,7 @@ class WeatherReceiver : BroadcastReceiver() {
                 val flowId = DebugLog.newFlowId()
                 DebugLogger.d("WeatherReceiver", "scheduled weather refresh starting flow=$flowId")
                 GlobalScope.launch(Dispatchers.IO) {
-                    WeatherHelper.updateWeather(context, flowId, trigger = "scheduled_refresh")
+                    WeatherHelper.refreshWeatherData(context, flowId, trigger = "weather_ttl")
                 }
             }
         }

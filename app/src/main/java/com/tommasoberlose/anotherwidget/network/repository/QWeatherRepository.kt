@@ -94,6 +94,13 @@ class QWeatherRepository(
         QWeatherAndroidRestriction.headers(context, androidRestriction)
     )
 
+    /** Resolves coordinates to the nearest QWeather location: a stable region id plus its name. */
+    suspend fun geoLookup(latitude: Double, longitude: Double) = apiServiceQWeather.geoLookup(
+        coordinate(latitude) + "," + coordinate(longitude),
+        apiKey,
+        QWeatherAndroidRestriction.headers(context, androidRestriction)
+    )
+
     // The API accepts at most two decimals, and the value goes in the URL path, so the locale must
     // not be allowed to introduce a decimal comma.
     private fun coordinate(value: Double): String = String.format(Locale.US, "%.2f", value)

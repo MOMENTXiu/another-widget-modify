@@ -51,6 +51,7 @@ class MainWidget : AppWidgetProvider() {
     override fun onEnabled(context: Context) {
         CalendarHelper.updateEventList(context)
         WeatherReceiver.setUpdates(context)
+        LocationChangeReceiver.setUpdates(context)
         MediaPlayerHelper.updatePlayingMediaInfo(context)
 
         if (Preferences.showEvents) {
@@ -64,6 +65,7 @@ class MainWidget : AppWidgetProvider() {
         if (getWidgetCount(context) == 0) {
             UpdatesReceiver.removeUpdates(context)
             WeatherReceiver.removeUpdates(context)
+            LocationChangeReceiver.removeUpdates(context)
         }
     }
 

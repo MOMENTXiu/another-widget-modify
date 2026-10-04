@@ -12,6 +12,7 @@ import com.tommasoberlose.anotherwidget.helpers.CachedWeatherForecast
 import com.tommasoberlose.anotherwidget.helpers.CachedWeatherHour
 import com.tommasoberlose.anotherwidget.helpers.DebugLog
 import com.tommasoberlose.anotherwidget.helpers.DebugLogger
+import com.tommasoberlose.anotherwidget.helpers.LocationChangePolicy
 import com.tommasoberlose.anotherwidget.helpers.WeatherCache
 import com.tommasoberlose.anotherwidget.helpers.WeatherHelper
 import com.tommasoberlose.anotherwidget.network.repository.QWeatherAuth
@@ -29,11 +30,18 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /** Outcome of the "test" button in the QWeather settings. */
 data class QWeatherCheck(val success: Boolean, val message: String)
 
 class WeatherNetworkApi(val context: Context) {
+
+    // Serialises weather refreshes: a TTL refresh and a location_changed refresh arriving at the
+    // same moment must produce one QWeather request, not two. The re-check inside the lock turns the
+    // loser of the race into a cache hit.
+    private val refreshMutex = Mutex()
 
     /**
      * Advances the widget by one step.
@@ -42,7 +50,7 @@ class WeatherNetworkApi(val context: Context) {
      * is missing, older than the network TTL, or was fetched for another place. A failed request
      * keeps the previous forecast, so a transient failure never blanks the widget.
      */
-    suspend fun updateWeather(flowId: String = DebugLog.newFlowId()) {
+    suspend fun updateWeather(flowId: String = DebugLog.newFlowId(), reason: String = "weather_ttl") {
         Kotpref.init(context)
         Preferences.weatherProviderError = "-"
         Preferences.weatherProviderLocationError = ""
@@ -77,49 +85,52 @@ class WeatherNetworkApi(val context: Context) {
         }
 
         try {
-            var forecast = WeatherCache.load()
-            DebugLogger.d("WeatherRepository",
-                "weather update lat=$latitude lon=$longitude ${describeCache(forecast)} flow=$flowId")
+            refreshMutex.withLock {
+                var forecast = WeatherCache.load()
+                val effectiveReason = LocationChangePolicy.effectiveReason(reason, forecast == null)
+                DebugLogger.d("WeatherRepository",
+                    "weather update reason=$effectiveReason lat=$latitude lon=$longitude ${describeCache(forecast)} flow=$flowId")
 
-            val refreshedOverNetwork: Boolean
-            if (needsRefresh(forecast, latitude, longitude, flowId)) {
-                val refreshed = requestForecast(latitude, longitude, flowId)
+                val refreshedOverNetwork: Boolean
+                if (needsRefresh(forecast, latitude, longitude, flowId)) {
+                    val refreshed = requestForecast(latitude, longitude, flowId, effectiveReason)
 
-                if (refreshed != null) {
-                    WeatherCache.save(refreshed)
-                    forecast = refreshed
-                    refreshedOverNetwork = true
+                    if (refreshed != null) {
+                        WeatherCache.save(refreshed)
+                        forecast = refreshed
+                        refreshedOverNetwork = true
+                    } else {
+                        DebugLogger.w("WeatherCache",
+                            "refresh failed, keeping the old forecast kept=${forecast != null} " +
+                                "cacheAgeMs=${forecast?.let { WeatherCache.ageOf(it) } ?: 0L} flow=$flowId")
+                        refreshedOverNetwork = false
+                    }
                 } else {
-                    DebugLogger.w("WeatherCache",
-                        "refresh failed, keeping the old forecast kept=${forecast != null} " +
-                            "cacheAgeMs=${forecast?.let { WeatherCache.ageOf(it) } ?: 0L} flow=$flowId")
                     refreshedOverNetwork = false
                 }
-            } else {
-                refreshedOverNetwork = false
-            }
 
-            forecast?.let { cached ->
-                val hour = WeatherCache.selectHour(cached)
+                forecast?.let { cached ->
+                    val hour = WeatherCache.selectHour(cached)
 
-                if (hour == null) {
-                    DebugLogger.w("WeatherRepository",
-                        "no cached hour close enough to now, leaving the weather as it is " +
-                            "cacheAgeMs=${WeatherCache.ageOf(cached)} hours=${cached.hours.size} flow=$flowId")
-                } else {
-                    DebugLogger.d("WeatherRepository",
-                        "hour selected index=${cached.hours.indexOf(hour)} forecastTime=${DebugLog.timestamp(hour.forecastTime)} " +
-                            "code=${hour.code} temperature=${hour.temperatureC} cacheAgeMs=${WeatherCache.ageOf(cached)} flow=$flowId")
-                    display(hour, flowId)
+                    if (hour == null) {
+                        DebugLogger.w("WeatherRepository",
+                            "no cached hour close enough to now, leaving the weather as it is " +
+                                "cacheAgeMs=${WeatherCache.ageOf(cached)} hours=${cached.hours.size} flow=$flowId")
+                    } else {
+                        DebugLogger.d("WeatherRepository",
+                            "hour selected index=${cached.hours.indexOf(hour)} forecastTime=${DebugLog.timestamp(hour.forecastTime)} " +
+                                "code=${hour.code} temperature=${hour.temperatureC} cacheAgeMs=${WeatherCache.ageOf(cached)} flow=$flowId")
+                        display(hour, flowId)
+                    }
                 }
-            }
 
-            when {
-                forecast == null ->
-                    DebugLogger.w("WeatherRepository", "weather flow failed reason=no_usable_forecast flow=$flowId")
-                else ->
-                    DebugLogger.d("WeatherRepository",
-                        "weather flow complete source=${if (refreshedOverNetwork) "network" else "cache"} flow=$flowId")
+                when {
+                    forecast == null ->
+                        DebugLogger.w("WeatherRepository", "weather flow failed reason=no_usable_forecast requested=$effectiveReason flow=$flowId")
+                    else ->
+                        DebugLogger.d("WeatherRepository",
+                            "weather flow complete source=${if (refreshedOverNetwork) "network" else "cache"} reason=$effectiveReason flow=$flowId")
+                }
             }
         } catch (ex: Exception) {
             // A malformed response or an unreachable API host must never take the app down.
@@ -240,11 +251,11 @@ class WeatherNetworkApi(val context: Context) {
         return false
     }
 
-    private suspend fun requestForecast(latitude: Double, longitude: Double, flowId: String): CachedWeatherForecast? {
+    private suspend fun requestForecast(latitude: Double, longitude: Double, flowId: String, reason: String): CachedWeatherForecast? {
         val startedAt = System.currentTimeMillis()
 
         DebugLogger.d("QWeatherApi",
-            "request endpoint=hourly host=${QWeatherAuth.baseUrl()} lat=$latitude lon=$longitude hours=24 localTime=true flow=$flowId")
+            "request endpoint=hourly host=${QWeatherAuth.baseUrl()} lat=$latitude lon=$longitude hours=24 localTime=true reason=$reason flow=$flowId")
 
         return try {
             when (val response = QWeatherRepository(context).getWeather(latitude, longitude)) {

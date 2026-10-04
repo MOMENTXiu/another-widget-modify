@@ -61,7 +61,7 @@ class UpdatesReceiver : BroadcastReceiver() {
                 GlobalScope.launch(Dispatchers.IO) {
                     CalendarHelper.updateEventList(context)
                     MediaPlayerHelper.updatePlayingMediaInfo(context)
-                    WeatherHelper.updateWeather(context, flowId, trigger = "manual_refresh")
+                    WeatherHelper.requestLocationChangeCheck(context, trigger = "manual_refresh", flowId = flowId)
                 }
             }
         }

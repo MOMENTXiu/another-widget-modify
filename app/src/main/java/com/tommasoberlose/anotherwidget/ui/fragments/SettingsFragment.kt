@@ -242,7 +242,7 @@ class SettingsFragment : Fragment() {
                 .withEndAction {
                     viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                         try {
-                            WeatherHelper.updateWeather(requireContext(), trigger = "manual_refresh")
+                            WeatherHelper.requestLocationChangeCheck(requireContext(), trigger = "manual_refresh")
                             CalendarHelper.updateEventList(requireContext())
                             MediaPlayerHelper.updatePlayingMediaInfo(requireContext())
                             ActiveNotificationsHelper.clearLastNotification(requireContext())

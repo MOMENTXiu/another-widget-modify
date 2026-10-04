@@ -17,6 +17,17 @@ object ApiServices {
             @Query("hours") hours: Int = 24,
             @Query("localTime") localTime: Boolean = true,
         ): NetworkResponse<HashMap<String, Any>, HashMap<String, Any>>
+
+        // GeoAPI v2 city lookup: resolves coordinates to the stable location id that identifies the
+        // weather region, so region changes never rely on display strings.
+        @GET("geo/v2/city/lookup")
+        suspend fun geoLookup(
+            @Query("location") location: String,
+            @Header("X-QW-Api-Key") apiKey: String,
+            @HeaderMap headers: Map<String, String>,
+            @Query("number") number: Int = 1,
+            @Query("lang") lang: String = "zh",
+        ): NetworkResponse<HashMap<String, Any>, HashMap<String, Any>>
     }
 
     interface TimeZonesService {

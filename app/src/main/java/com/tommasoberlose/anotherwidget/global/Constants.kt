@@ -11,7 +11,24 @@ object Constants {
 
     // A cached location older than this is refreshed before the next weather request. It only
     // triggers a location refresh: an older coordinate stays usable, see LocationHelper.
+    // This is the persisted FALLBACK policy and stays at 6h; it is deliberately not the same as the
+    // much shorter last-known acceptance window below.
     const val LOCATION_CACHE_TTL = 6 * 60 * 60 * 1000L
+
+    // A system last-known position is used as-is for weather positioning when it is at most this
+    // old AND at most LOCATION_LAST_KNOWN_MAX_ACCURACY_M accurate. Fresh requests are the exception,
+    // not the rule.
+    const val LOCATION_LAST_KNOWN_MAX_AGE_MS = 30 * 60 * 1000L
+    const val LOCATION_LAST_KNOWN_MAX_ACCURACY_M = 500f
+
+    // How often the LocalLocationChange check runs. Weather is a region scale quantity; one hour is
+    // plenty and keeps the check nearly free.
+    const val LOCATION_CHECK_INTERVAL_MS = 60 * 60 * 1000L
+
+    // Fresh fixes are only requested when no usable last-known exists, over NETWORK_PROVIDER only,
+    // with this hard timeout and accuracy ceiling. GPS is never started on the default path.
+    const val LOCATION_FRESH_TIMEOUT_MS = 5 * 1000L
+    const val LOCATION_FRESH_MAX_ACCURACY_M = 2_000f
 
     // Upper bound for a single location fix, so the foreground service never waits on GPS forever.
     const val LOCATION_ACQUISITION_TIMEOUT = 15 * 1000L
